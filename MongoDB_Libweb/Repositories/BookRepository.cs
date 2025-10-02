@@ -117,9 +117,35 @@ namespace MongoDB_Libweb.Repositories
             return await _books.Find(b => b.Categories.Contains(categoryId)).ToListAsync();
         }
 
+        public async Task<List<Book>> GetByCategoryAsync(string categoryId, int page = 1, int limit = 10)
+        {
+            var skip = (page - 1) * limit;
+            return await _books.Find(b => b.Categories.Contains(categoryId))
+                .Skip(skip)
+                .Limit(limit)
+                .ToListAsync();
+        }
+
         public async Task<List<Book>> GetByAuthorAsync(string authorId)
         {
             return await _books.Find(b => b.Authors.Contains(authorId)).ToListAsync();
+        }
+
+        public async Task<List<Book>> GetByAuthorAsync(string authorId, int page = 1, int limit = 10)
+        {
+            var skip = (page - 1) * limit;
+            return await _books.Find(b => b.Authors.Contains(authorId))
+                .Skip(skip)
+                .Limit(limit)
+                .ToListAsync();
+        }
+
+        public async Task<List<Book>> GetFeaturedBooksAsync(int limit = 6)
+        {
+            return await _books.Find(_ => true)
+                .Sort(Builders<Book>.Sort.Descending(b => b.CreatedAt))
+                .Limit(limit)
+                .ToListAsync();
         }
 
         public async Task<bool> IsAvailableAsync(string bookId)

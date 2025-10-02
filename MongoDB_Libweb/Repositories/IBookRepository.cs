@@ -12,7 +12,10 @@ namespace MongoDB_Libweb.Repositories
         Task<bool> DeleteAsync(string id);
         Task<long> CountAsync();
         Task<List<Book>> GetByCategoryAsync(string categoryId);
+        Task<List<Book>> GetByCategoryAsync(string categoryId, int page = 1, int limit = 10);
         Task<List<Book>> GetByAuthorAsync(string authorId);
+        Task<List<Book>> GetByAuthorAsync(string authorId, int page = 1, int limit = 10);
+        Task<List<Book>> GetFeaturedBooksAsync(int limit = 6);
         Task<bool> IsAvailableAsync(string bookId);
         Task<bool> SetAvailabilityAsync(string bookId, bool isAvailable);
     }

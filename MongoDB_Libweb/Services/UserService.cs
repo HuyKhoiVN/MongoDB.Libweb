@@ -117,6 +117,25 @@ namespace MongoDB_Libweb.Services
             }
         }
 
+        public async Task<ApiResponse<UserDto>> GetUserByEmailAsync(string email)
+        {
+            try
+            {
+                var user = await _userRepository.GetByEmailAsync(email);
+                if (user == null)
+                {
+                    return ApiResponse<UserDto>.ErrorResponse("User not found");
+                }
+
+                var userDto = MapToDto(user);
+                return ApiResponse<UserDto>.SuccessResponse(userDto);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<UserDto>.ErrorResponse($"Failed to get user: {ex.Message}");
+            }
+        }
+
         public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(int page = 1, int limit = 10)
         {
             try

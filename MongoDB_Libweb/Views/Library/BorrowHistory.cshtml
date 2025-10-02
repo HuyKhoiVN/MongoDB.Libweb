@@ -1,0 +1,212 @@
+@{
+    ViewData["Title"] = "Borrow History";
+    Layout = "~/Views/Library/_LibraryLayout.cshtml";
+}
+
+<style>
+        .history-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .history-header { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); margin-bottom: 30px; }
+        .history-title { font-size: 2em; margin-bottom: 20px; color: #333; }
+        .filters { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; min-width: 150px; }
+        .filter-group label { font-weight: bold; margin-bottom: 5px; color: #333; }
+        .filter-group select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-primary:hover { background: #e55a00; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .table th { background: #f8f9fa; font-weight: bold; color: #333; }
+        .table tr:hover { background: #f8f9fa; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 20px; }
+        .pagination button { padding: 8px 12px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+        .pagination button:hover:not(:disabled) { background: var(--primary-color); color: white; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loading { text-align: center; padding: 50px; color: #666; }
+        .error { background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .status-borrowed { background: #fff3cd; color: #856404; }
+        .status-returned { background: #d4edda; color: #155724; }
+        .status-overdue { background: #f8d7da; color: #721c24; }
+        .book-title { font-weight: bold; color: #333; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .date-cell { white-space: nowrap; }
+        .overdue { color: #dc3545; font-weight: bold; }
+    </style>
+
+<div class="history-container">
+        <div class="history-header">
+            <h1 class="history-title">My Borrow History</h1>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="status-filter">Status</label>
+                    <select id="status-filter">
+                        <option value="">All Status</option>
+                        <option value="Borrowed">Borrowed</option>
+                        <option value="Returned">Returned</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="limit">Per Page</label>
+                    <select id="limit">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button class="btn btn-primary" onclick="loadBorrowHistory()">Refresh</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-container"></div>
+
+        <div class="table-container">
+            <div id="borrows-loading" class="loading">Loading borrow history...</div>
+            <table class="table" id="borrows-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Borrow Date</th>
+                        <th>Due Date</th>
+                        <th>Return Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="borrows-tbody"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prev-page" onclick="changePage(-1)">Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-page" onclick="changePage(1)">Next</button>
+        </div>
+
+    <script src="~/template/template.js"></script>
+    <script>
+        let currentPage = 1;
+        let currentLimit = 10;
+        let totalPages = 1;
+        let currentUserId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userId = ELibAPI.getUserId();
+            if (!userId) {
+                alert('Please login to view your borrow history');
+                window.location.href = '/Library/Login';
+                return;
+            }
+            currentUserId = userId;
+            loadBorrowHistory();
+        });
+
+        async function loadBorrowHistory() {
+            try {
+                // Validate userId before making API call
+                if (!currentUserId) {
+                    showError('User ID not found. Please login again.');
+                    return;
+                }
+
+                const status = document.getElementById('status-filter').value;
+                const limit = document.getElementById('limit').value;
+                currentLimit = parseInt(limit);
+                
+                document.getElementById('borrows-loading').style.display = 'block';
+                document.getElementById('borrows-table').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+
+                // Build query parameters for status only (page and limit are already in the endpoint)
+                let queryParams = '';
+                if (status) queryParams = `&status=${encodeURIComponent(status)}`;
+
+                const response = await ELibAPI.get(ELibAPI.endpoints.borrow.getByUserId(currentUserId, currentPage, currentLimit) + queryParams);
+                
+                if (response.success) {
+                    displayBorrows(response.data);
+                    updatePagination();
+                } else {
+                    showError('Failed to load borrow history: ' + response.error);
+                }
+
+            } catch (error) {
+                console.error('Error loading borrow history:', error);
+                showError('Failed to load borrow history: ' + error.message);
+            } finally {
+                document.getElementById('borrows-loading').style.display = 'none';
+                document.getElementById('borrows-table').style.display = 'table';
+                document.getElementById('pagination').style.display = 'flex';
+            }
+        }
+
+        function displayBorrows(borrows) {
+            const tbody = document.getElementById('borrows-tbody');
+            tbody.innerHTML = '';
+
+            if (!borrows || borrows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No borrows found</td></tr>';
+                return;
+            }
+
+            borrows.forEach(borrow => {
+                const row = document.createElement('tr');
+                const isOverdue = borrow.status === 'Borrowed' && new Date(borrow.dueDate) < new Date();
+                const statusClass = isOverdue ? 'status-overdue' : `status-${borrow.status.toLowerCase()}`;
+                const statusText = isOverdue ? 'Overdue' : borrow.status;
+                
+                row.innerHTML = `
+                    <td><div class="book-title" title="${borrow.bookTitle || 'Unknown Book'}">${borrow.bookTitle || 'Unknown Book'}</div></td>
+                    <td class="date-cell">${new Date(borrow.borrowDate).toLocaleDateString()}</td>
+                    <td class="date-cell ${isOverdue ? 'overdue' : ''}">${new Date(borrow.dueDate).toLocaleDateString()}</td>
+                    <td class="date-cell">${borrow.returnDate ? new Date(borrow.returnDate).toLocaleDateString() : '-'}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${borrow.status === 'Borrowed' ? `<button class="btn btn-success" onclick="returnBook('${borrow.id}')">Return</button>` : '<span style="color: #666;">-</span>'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePagination() {
+            totalPages = Math.max(1, Math.ceil(100 / currentLimit));
+            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
+        }
+
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                loadBorrowHistory();
+            }
+        }
+
+        async function returnBook(borrowId) {
+            if (!confirm('Are you sure you want to return this book?')) return;
+
+            try {
+                const returnData = { borrowId: borrowId };
+                const response = await ELibAPI.post(ELibAPI.endpoints.borrow.return, returnData);
+                if (response.success) {
+                    alert('Book returned successfully!');
+                    loadBorrowHistory();
+                } else {
+                    showError('Failed to return book: ' + response.error);
+                }
+            } catch (error) {
+                console.error('Error returning book:', error);
+                showError('Failed to return book: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+    </script>

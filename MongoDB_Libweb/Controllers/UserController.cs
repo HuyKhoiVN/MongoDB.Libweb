@@ -9,10 +9,12 @@ namespace MongoDB_Libweb.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, ICurrentUserService currentUserService)
         {
             _userService = userService;
+            _currentUserService = currentUserService;
         }
 
         [HttpPost("register")]
@@ -58,6 +60,19 @@ namespace MongoDB_Libweb.Controllers
         public async Task<ActionResult<ApiResponse<UserDto>>> GetUserByUsername(string username)
         {
             var result = await _userService.GetUserByUsernameAsync(username);
+            
+            if (!result.Success)
+            {
+                return NotFound(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("email/{email}")]
+        public async Task<ActionResult<ApiResponse<UserDto>>> GetUserByEmail(string email)
+        {
+            var result = await _userService.GetUserByEmailAsync(email);
             
             if (!result.Success)
             {
@@ -115,6 +130,19 @@ namespace MongoDB_Libweb.Controllers
             if (!result.Success)
             {
                 return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("current")]
+        public async Task<ActionResult<ApiResponse<UserDto>>> GetCurrentUser()
+        {
+            var result = await _currentUserService.GetCurrentUserAsync();
+            
+            if (!result.Success)
+            {
+                return Unauthorized(result);
             }
 
             return Ok(result);

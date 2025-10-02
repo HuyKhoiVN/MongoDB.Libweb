@@ -1,0 +1,694 @@
+@{
+    ViewData["Title"] = "Borrow Management";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+}
+
+<style>
+    .admin-container {
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .filters {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .filter-row {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+    }
+    .filter-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .filter-group input, .filter-group select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #e55a00;
+    }
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    .btn-success:hover {
+        background: #218838;
+    }
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    .btn-danger:hover {
+        background: #c82333;
+    }
+    .btn-warning {
+        background: #ffc107;
+        color: #212529;
+    }
+    .btn-warning:hover {
+        background: #e0a800;
+    }
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table th {
+        background: #f8f9fa;
+        padding: 15px;
+        text-align: left;
+        font-weight: bold;
+        color: #333;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .table td {
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .table tr:hover {
+        background: #f8f9fa;
+    }
+    .loading {
+        text-align: center;
+        padding: 50px;
+        color: #666;
+    }
+    .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .pagination button {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+    }
+    .pagination button:hover:not(:disabled) {
+        background: #f8f9fa;
+    }
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .status-borrowed {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    .status-returned {
+        background: #d4edda;
+        color: #155724;
+    }
+    .status-overdue {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .overdue {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    .book-title {
+        font-weight: bold;
+        color: #333;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .user-name {
+        font-weight: bold;
+        color: #333;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @@keyframes modalSlideIn {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #FF6B00, #FF8C00);
+        color: white;
+        padding: 20px 30px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-title {
+        font-size: 20px;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+    }
+    
+    .close:hover {
+        opacity: 0.7;
+    }
+    
+    .modal-body {
+        padding: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #eee;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #FF6B00;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .modal-footer {
+        padding: 20px 30px;
+        background: #f8f9fa;
+        border-radius: 0 0 12px 12px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .btn-modal {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    
+    .btn-modal-primary {
+        background: #FF6B00;
+        color: white;
+    }
+    
+    .btn-modal-primary:hover {
+        background: #FF4500;
+    }
+    
+    .btn-modal-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-modal-secondary:hover {
+        background: #5a6268;
+    }
+    
+    .btn-modal-success {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-modal-success:hover {
+        background: #218838;
+    }
+    
+    .readonly-field {
+        background: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    
+    .success-message {
+        color: #28a745;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="admin-container">
+    <h1>Borrow Management</h1>
+    
+    <div id="error-container"></div>
+    
+    <div class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="status">Status</label>
+                <select id="status">
+                    <option value="">All Status</option>
+                    <option value="Borrowed">Borrowed</option>
+                    <option value="Returned">Returned</option>
+                    <option value="Overdue">Overdue</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="userSearch">User</label>
+                <input type="text" id="userSearch" placeholder="Search by user...">
+            </div>
+            <div class="filter-group">
+                <label for="bookSearch">Book</label>
+                <input type="text" id="bookSearch" placeholder="Search by book...">
+            </div>
+            <div class="filter-group">
+                <label for="fromDate">From Date</label>
+                <input type="date" id="fromDate">
+            </div>
+            <div class="filter-group">
+                <label for="toDate">To Date</label>
+                <input type="date" id="toDate">
+            </div>
+            <div class="filter-group">
+                <label for="limit">Per Page</label>
+                <select id="limit">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button class="btn btn-primary" onclick="loadBorrows()">Search</button>
+            </div>
+            <div class="filter-group">
+                <button class="btn btn-warning" onclick="loadOverdueBorrows()">Show Overdue</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div id="borrows-loading" class="loading">Loading borrows...</div>
+        <table class="table" id="borrows-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Book</th>
+                    <th>Borrow Date</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="borrows-tbody">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" id="pagination" style="display: none;">
+        <button id="prev-page" onclick="changePage(-1)">Previous</button>
+        <span id="page-info">Page 1 of 1</span>
+        <button id="next-page" onclick="changePage(1)">Next</button>
+    </div>
+</div>
+
+<!-- Borrow Modal -->
+<div id="borrowModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="borrowModalTitle">Borrow Details</h2>
+            <span class="close" onclick="closeBorrowModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="borrowDetails">
+                <div class="form-group">
+                    <label>Borrow ID</label>
+                    <input type="text" id="borrowId" readonly class="readonly-field">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>User</label>
+                        <input type="text" id="borrowUser" readonly class="readonly-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Book</label>
+                        <input type="text" id="borrowBook" readonly class="readonly-field">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Borrow Date</label>
+                        <input type="text" id="borrowDate" readonly class="readonly-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Due Date</label>
+                        <input type="text" id="dueDate" readonly class="readonly-field">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Return Date</label>
+                        <input type="text" id="returnDate" readonly class="readonly-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <input type="text" id="borrowStatus" readonly class="readonly-field">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="borrowFormMessage" class="success-message" style="display: none;"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal btn-modal-secondary" onclick="closeBorrowModal()">Close</button>
+            <button type="button" class="btn-modal btn-modal-success" id="returnBookBtn" onclick="returnBook()" style="display: none;">Return Book</button>
+        </div>
+    </div>
+</div>
+
+<script src="~/template/template.js"></script>
+<script>
+    let currentPage = 1;
+    let currentLimit = 10;
+    let totalPages = 1;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBorrows();
+    });
+
+    async function loadBorrows() {
+        try {
+            document.getElementById('borrows-loading').style.display = 'block';
+            document.getElementById('borrows-table').style.display = 'none';
+            document.getElementById('pagination').style.display = 'none';
+
+            const status = document.getElementById('status').value;
+            const userSearch = document.getElementById('userSearch').value;
+            const bookSearch = document.getElementById('bookSearch').value;
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            const limit = document.getElementById('limit').value;
+            currentLimit = parseInt(limit);
+
+            let url = `/api/v1/borrow/all?page=${currentPage}&limit=${currentLimit}`;
+            
+            // If we have filters, use search endpoint
+            if (status || userSearch || bookSearch || fromDate || toDate) {
+                const searchData = {
+                    status: status || null,
+                    userId: userSearch || null,
+                    bookId: bookSearch || null,
+                    fromDate: fromDate || null,
+                    toDate: toDate || null,
+                    page: currentPage,
+                    limit: currentLimit
+                };
+                
+                const response = await ELibAPI.post('/api/v1/borrow/search', searchData);
+                if (response.success) {
+                    displayBorrows(response.data);
+                    updatePagination();
+                } else {
+                    showError('Failed to search borrows: ' + response.message);
+                }
+            } else {
+                const response = await ELibAPI.get(url);
+                if (response.success) {
+                    displayBorrows(response.data);
+                    updatePagination();
+                } else {
+                    showError('Failed to load borrows: ' + response.message);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading borrows:', error);
+            showError('Failed to load borrows: ' + error.message);
+        } finally {
+            document.getElementById('borrows-loading').style.display = 'none';
+            document.getElementById('borrows-table').style.display = 'table';
+            document.getElementById('pagination').style.display = 'flex';
+        }
+    }
+
+    async function loadOverdueBorrows() {
+        try {
+            document.getElementById('borrows-loading').style.display = 'block';
+            document.getElementById('borrows-table').style.display = 'none';
+            document.getElementById('pagination').style.display = 'none';
+
+            const response = await ELibAPI.get('/api/v1/borrow/overdue');
+            
+            if (response.success) {
+                displayBorrows(response.data);
+                // For overdue, we show all results without pagination
+                document.getElementById('pagination').style.display = 'none';
+            } else {
+                showError('Failed to load overdue borrows: ' + response.message);
+            }
+        } catch (error) {
+            console.error('Error loading overdue borrows:', error);
+            showError('Failed to load overdue borrows: ' + error.message);
+        } finally {
+            document.getElementById('borrows-loading').style.display = 'none';
+            document.getElementById('borrows-table').style.display = 'table';
+        }
+    }
+
+    function displayBorrows(borrows) {
+        const tbody = document.getElementById('borrows-tbody');
+        tbody.innerHTML = '';
+
+        if (!borrows || borrows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">No borrows found</td></tr>';
+            return;
+        }
+
+        borrows.forEach(borrow => {
+            const isOverdue = borrow.status === 'Borrowed' && new Date(borrow.dueDate) < new Date();
+            const statusClass = isOverdue ? 'status-overdue' : `status-${borrow.status.toLowerCase()}`;
+            const statusText = isOverdue ? 'Overdue' : borrow.status;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${borrow.id}</td>
+                <td>
+                    <div class="user-name">${borrow.user?.username || 'Unknown User'}</div>
+                    <div style="font-size: 12px; color: #666;">${borrow.user?.fullName || ''}</div>
+                </td>
+                <td>
+                    <div class="book-title" title="${borrow.book?.title || 'Unknown Book'}">${borrow.book?.title || 'Unknown Book'}</div>
+                    <div style="font-size: 12px; color: #666;">${borrow.book?.authors?.join(', ') || ''}</div>
+                </td>
+                <td>${new Date(borrow.borrowDate).toLocaleDateString()}</td>
+                <td class="${isOverdue ? 'overdue' : ''}">${new Date(borrow.dueDate).toLocaleDateString()}</td>
+                <td>${borrow.returnDate ? new Date(borrow.returnDate).toLocaleDateString() : '-'}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-secondary" onclick="openBorrowModal('${borrow.id}')">View</button>
+                    ${borrow.status === 'Borrowed' ? `<button class="btn btn-success" onclick="returnBook('${borrow.id}')">Return</button>` : ''}
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function updatePagination() {
+        document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prev-page').disabled = currentPage <= 1;
+        document.getElementById('next-page').disabled = currentPage >= totalPages;
+    }
+
+    function changePage(direction) {
+        const newPage = currentPage + direction;
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentPage = newPage;
+            loadBorrows();
+        }
+    }
+
+    // Borrow Modal Functions
+    let currentBorrowId = null;
+
+    function openBorrowModal(borrowId) {
+        currentBorrowId = borrowId;
+        const modal = document.getElementById('borrowModal');
+        const modalTitle = document.getElementById('borrowModalTitle');
+        const returnBtn = document.getElementById('returnBookBtn');
+        
+        modalTitle.textContent = 'Borrow Details';
+        returnBtn.style.display = 'none';
+        
+        loadBorrowData(borrowId);
+        modal.style.display = 'block';
+    }
+
+    function closeBorrowModal() {
+        const modal = document.getElementById('borrowModal');
+        modal.style.display = 'none';
+    }
+
+    async function loadBorrowData(borrowId) {
+        try {
+            const response = await ELibAPI.get(`/api/v1/borrow/${borrowId}`);
+            if (response.success) {
+                const borrow = response.data;
+                document.getElementById('borrowId').value = borrow.id;
+                document.getElementById('borrowUser').value = `${borrow.user?.username || 'Unknown'} (${borrow.user?.fullName || ''})`;
+                document.getElementById('borrowBook').value = borrow.book?.title || 'Unknown Book';
+                document.getElementById('borrowDate').value = new Date(borrow.borrowDate).toLocaleString();
+                document.getElementById('dueDate').value = new Date(borrow.dueDate).toLocaleString();
+                document.getElementById('returnDate').value = borrow.returnDate ? new Date(borrow.returnDate).toLocaleString() : 'Not returned';
+                document.getElementById('borrowStatus').value = borrow.status;
+                
+                // Show return button if book is borrowed
+                if (borrow.status === 'Borrowed') {
+                    document.getElementById('returnBookBtn').style.display = 'inline-block';
+                }
+            } else {
+                showError('Failed to load borrow data: ' + response.message);
+            }
+        } catch (error) {
+            showError('Error loading borrow data: ' + error.message);
+        }
+    }
+
+    async function returnBook(borrowId = null) {
+        const id = borrowId || currentBorrowId;
+        if (!id) return;
+        
+        if (!confirm('Are you sure you want to return this book?')) return;
+        
+        try {
+            const response = await ELibAPI.post('/api/v1/borrow/return', { borrowId: id });
+            if (response.success) {
+                showSuccess('Book returned successfully!');
+                closeBorrowModal();
+                loadBorrows();
+            } else {
+                showError('Failed to return book: ' + response.message);
+            }
+        } catch (error) {
+            showError('Error returning book: ' + error.message);
+        }
+    }
+
+    function showError(message) {
+        const errorContainer = document.getElementById('error-container');
+        errorContainer.innerHTML = `<div class="error">${message}</div>`;
+    }
+
+    function showSuccess(message) {
+        const errorContainer = document.getElementById('error-container');
+        errorContainer.innerHTML = `<div class="alert alert-success">${message}</div>`;
+        setTimeout(() => {
+            errorContainer.innerHTML = '';
+        }, 3000);
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('borrowModal');
+        if (event.target === modal) {
+            closeBorrowModal();
+        }
+    }
+</script>
+

@@ -1,0 +1,232 @@
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Library/_LibraryLayout.cshtml";
+}
+
+<style>
+        .auth-container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-title {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .auth-subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .btn-register {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .btn-register:hover {
+            background: #e55a00;
+            transform: translateY(-2px);
+        }
+        .auth-links {
+            text-align: center;
+        }
+        .auth-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .back-home {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-home a {
+            color: #666;
+            text-decoration: none;
+        }
+        .back-home a:hover {
+            color: var(--primary-color);
+        }
+        .password-requirements {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        @@media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+<div class="auth-container">
+        <div class="auth-header">
+            <h1 class="auth-title">Join Our Library</h1>
+            <p class="auth-subtitle">Create your account to start borrowing books</p>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="error">@TempData["Error"]</div>
+        }
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="success">@TempData["Success"]</div>
+        }
+
+        <form method="post" action="@Url.Action("ProcessRegister", "Library")">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Username *</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="fullName">Full Name *</label>
+                <input type="text" id="fullName" name="fullName" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password" required>
+                    <div class="password-requirements">
+                        Password must be at least 6 characters long
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-register">Create Account</button>
+        </form>
+
+        <div class="auth-links">
+            <p>Already have an account? <a href="@Url.Action("Login", "Library")">Sign in here</a></p>
+        </div>
+
+        <div class="back-home">
+            <a href="@Url.Action("Index", "Library")">← Back to Library</a>
+        </div>
+    </div>
+
+    <script src="~/template/template.js"></script>
+    <script>
+        // Password strength validation
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const requirements = document.querySelector('.password-requirements');
+            
+            if (password.length < 6) {
+                requirements.style.color = '#c62828';
+                requirements.textContent = 'Password must be at least 6 characters long';
+            } else {
+                requirements.style.color = '#2e7d32';
+                requirements.textContent = 'Password is strong enough';
+            }
+        });
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const fullName = document.getElementById('fullName').value;
+
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long');
+                return;
+            }
+
+            if (username.length < 3) {
+                e.preventDefault();
+                alert('Username must be at least 3 characters long');
+                return;
+            }
+
+            if (!email.includes('@@')) {
+                e.preventDefault();
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            if (fullName.length < 2) {
+                e.preventDefault();
+                alert('Please enter your full name');
+                return;
+            }
+        });
+    </script>

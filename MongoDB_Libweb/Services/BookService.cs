@@ -178,11 +178,11 @@ namespace MongoDB_Libweb.Services
             }
         }
 
-        public async Task<ApiResponse<List<BookDto>>> GetBooksByCategoryAsync(string categoryId)
+        public async Task<ApiResponse<List<BookDto>>> GetBooksByCategoryAsync(string categoryId, int page = 1, int limit = 10)
         {
             try
             {
-                var books = await _bookRepository.GetByCategoryAsync(categoryId);
+                var books = await _bookRepository.GetByCategoryAsync(categoryId, page, limit);
                 var bookDtos = books.Select(MapToDto).ToList();
                 return ApiResponse<List<BookDto>>.SuccessResponse(bookDtos);
             }
@@ -192,17 +192,32 @@ namespace MongoDB_Libweb.Services
             }
         }
 
-        public async Task<ApiResponse<List<BookDto>>> GetBooksByAuthorAsync(string authorId)
+        public async Task<ApiResponse<List<BookDto>>> GetBooksByAuthorAsync(string authorId, int page = 1, int limit = 10)
         {
             try
             {
-                var books = await _bookRepository.GetByAuthorAsync(authorId);
+                var books = await _bookRepository.GetByAuthorAsync(authorId, page, limit);
                 var bookDtos = books.Select(MapToDto).ToList();
                 return ApiResponse<List<BookDto>>.SuccessResponse(bookDtos);
             }
             catch (Exception ex)
             {
                 return ApiResponse<List<BookDto>>.ErrorResponse($"Failed to get books by author: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<List<BookDto>>> GetFeaturedBooksAsync(int limit = 6)
+        {
+            try
+            {
+                // Get the most recently added books as featured books
+                var books = await _bookRepository.GetFeaturedBooksAsync(limit);
+                var bookDtos = books.Select(MapToDto).ToList();
+                return ApiResponse<List<BookDto>>.SuccessResponse(bookDtos);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<BookDto>>.ErrorResponse($"Failed to get featured books: {ex.Message}");
             }
         }
 

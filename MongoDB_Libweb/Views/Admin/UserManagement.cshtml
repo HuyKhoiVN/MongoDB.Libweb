@@ -1,0 +1,800 @@
+@{
+    ViewData["Title"] = "User Management";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+}
+
+<style>
+        .admin-container {
+             
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .filter-group input, .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #e55a00;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+        }
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @@keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #FF6B00, #FF8C00);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #FF6B00;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .modal-footer {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn-modal {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-modal-primary {
+            background: #FF6B00;
+            color: white;
+        }
+        
+        .btn-modal-primary:hover {
+            background: #FF4500;
+        }
+        
+        .btn-modal-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-modal-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-modal-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-modal-danger:hover {
+            background: #c82333;
+        }
+        
+        .readonly-field {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .success-message {
+            color: #28a745;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+
+<div class="admin-container">
+        <h1>User Management</h1>
+        
+        <div id="error-container"></div>
+        
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="search">Search</label>
+                    <input type="text" id="search" placeholder="Search users...">
+                </div>
+                <div class="filter-group">
+                    <label for="role">Role</label>
+                    <select id="role">
+                        <option value="">All Roles</option>
+                        <option value="Admin">Admin</option>
+                        <option value="User">User</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="active">Status</label>
+                    <select id="active">
+                        <option value="">All Status</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="limit">Per Page</label>
+                    <select id="limit">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button class="btn btn-primary" onclick="loadUsers()">Search</button>
+                </div>
+                <div class="filter-group">
+                    <button class="btn btn-success" onclick="openUserModal('add')">+ Add New User</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div id="users-loading" class="loading">Loading users...</div>
+            <table class="table" id="users-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prev-page" onclick="changePage(-1)">Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-page" onclick="changePage(1)">Next</button>
+        </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="userModalTitle">Add New User</h2>
+                <span class="close" onclick="closeUserModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">Username *</label>
+                            <input type="text" id="username" name="username" required>
+                            <div id="username-error" class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
+                            <div id="email-error" class="error-message"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fullName">Full Name *</label>
+                            <input type="text" id="fullName" name="fullName" required>
+                            <div id="fullName-error" class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">Role *</label>
+                            <select id="userRole" name="role" required>
+                                <option value="">Select Role</option>
+                                <option value="User">User</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                            <div id="role-error" class="error-message"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">Password *</label>
+                            <input type="password" id="password" name="password" required>
+                            <div id="password-error" class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password *</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            <div id="confirmPassword-error" class="error-message"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="isActive">Status</label>
+                        <select id="isActive" name="isActive">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div id="userFormMessage" class="success-message" style="display: none;"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal btn-modal-secondary" onclick="closeUserModal()">Cancel</button>
+                <button type="button" class="btn-modal btn-modal-primary" id="userModalSaveBtn" onclick="saveUser()">Save User</button>
+                <button type="button" class="btn-modal btn-modal-danger" id="userModalDeleteBtn" onclick="deleteUser()" style="display: none;">Delete User</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/template/template.js"></script>
+    <script>
+        let currentPage = 1;
+        let currentLimit = 10;
+        let totalPages = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+        });
+
+        async function loadUsers() {
+            try {
+                const search = document.getElementById('search').value;
+                const role = document.getElementById('role').value;
+                const active = document.getElementById('active').value;
+                const limit = document.getElementById('limit').value;
+                
+                currentLimit = parseInt(limit);
+                
+                // Show loading
+                document.getElementById('users-loading').style.display = 'block';
+                document.getElementById('users-table').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+
+                // Build query parameters
+                let queryParams = '';
+                if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+                if (role) queryParams += `&role=${encodeURIComponent(role)}`;
+                if (active) queryParams += `&active=${active}`;
+
+                const response = await ELibAPI.get(ELibAPI.endpoints.user.getAll(currentPage, currentLimit) + queryParams);
+                
+                if (response.success) {
+                    displayUsers(response.data);
+                    updatePagination();
+                } else {
+                    showError('Failed to load users: ' + response.error);
+                }
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showError('Failed to load users: ' + error.message);
+            } finally {
+                document.getElementById('users-loading').style.display = 'none';
+                document.getElementById('users-table').style.display = 'table';
+                document.getElementById('pagination').style.display = 'flex';
+            }
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('users-tbody');
+            tbody.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">No users found</td></tr>';
+                return;
+            }
+
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.fullName || '-'}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td><span class="status-badge ${user.isActive ? 'status-active' : 'status-inactive'}">${user.isActive ? 'Active' : 'Inactive'}</span></td>
+                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="openUserModal('view', '${user.id}')">View</button>
+                        <button class="btn btn-primary" onclick="openUserModal('edit', '${user.id}')">Edit</button>
+                        <button class="btn btn-danger" onclick="confirmDeleteUser('${user.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePagination() {
+            // This would be calculated based on total count from API
+            // For now, we'll use a simple approach
+            totalPages = Math.max(1, Math.ceil(100 / currentLimit)); // Assuming 100 total users
+            
+            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
+        }
+
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                loadUsers();
+            }
+        }
+
+        function viewUser(userId) {
+            window.location.href = `/Admin/UserDetails/${userId}`;
+        }
+
+        function editUser(userId) {
+            window.location.href = `/Admin/UserDetails/${userId}?edit=true`;
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user?')) {
+                return;
+            }
+
+            try {
+                const response = await ELibAPI.delete(ELibAPI.endpoints.user.delete(userId));
+                if (response.success) {
+                    alert('User deleted successfully');
+                    loadUsers();
+                } else {
+                    showError('Failed to delete user: ' + response.error);
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showError('Failed to delete user: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // User Modal Functions
+        let currentUserId = null;
+        let modalMode = 'add'; // 'add', 'edit', 'view'
+
+        function openUserModal(mode, userId = null) {
+            modalMode = mode;
+            currentUserId = userId;
+            const modal = document.getElementById('userModal');
+            const modalTitle = document.getElementById('userModalTitle');
+            const saveBtn = document.getElementById('userModalSaveBtn');
+            const deleteBtn = document.getElementById('userModalDeleteBtn');
+            const form = document.getElementById('userForm');
+            
+            // Clear form and errors
+            form.reset();
+            clearFormErrors();
+            
+            // Set modal title and button visibility
+            if (mode === 'add') {
+                modalTitle.textContent = 'Add New User';
+                saveBtn.textContent = 'Save User';
+                saveBtn.style.display = 'inline-block';
+                deleteBtn.style.display = 'none';
+                makeFormEditable(true);
+            } else if (mode === 'edit') {
+                modalTitle.textContent = 'Edit User';
+                saveBtn.textContent = 'Update User';
+                saveBtn.style.display = 'inline-block';
+                deleteBtn.style.display = 'inline-block';
+                makeFormEditable(true);
+                loadUserData(userId);
+            } else if (mode === 'view') {
+                modalTitle.textContent = 'User Details';
+                saveBtn.style.display = 'none';
+                deleteBtn.style.display = 'none';
+                makeFormEditable(false);
+                loadUserData(userId);
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeUserModal() {
+            const modal = document.getElementById('userModal');
+            modal.style.display = 'none';
+            clearFormErrors();
+        }
+
+        function makeFormEditable(editable) {
+            const inputs = document.querySelectorAll('#userForm input, #userForm select');
+            inputs.forEach(input => {
+                input.disabled = !editable;
+                if (!editable) {
+                    input.classList.add('readonly-field');
+                } else {
+                    input.classList.remove('readonly-field');
+                }
+            });
+        }
+
+        function clearFormErrors() {
+            const errorElements = document.querySelectorAll('.error-message');
+            errorElements.forEach(el => el.textContent = '');
+            const messageElement = document.getElementById('userFormMessage');
+            messageElement.style.display = 'none';
+        }
+
+        async function loadUserData(userId) {
+            try {
+                const response = await ELibAPI.get(`/api/v1/user/${userId}`);
+                if (response.success) {
+                    const user = response.data;
+                    document.getElementById('username').value = user.username || '';
+                    document.getElementById('email').value = user.email || '';
+                    document.getElementById('fullName').value = user.fullName || '';
+                    document.getElementById('userRole').value = user.role || '';
+                    document.getElementById('isActive').value = user.isActive ? 'true' : 'false';
+                } else {
+                    showError('Failed to load user data: ' + response.message);
+                }
+            } catch (error) {
+                showError('Error loading user data: ' + error.message);
+            }
+        }
+
+        async function saveUser() {
+            if (modalMode === 'view') return;
+            
+            clearFormErrors();
+            
+            // Validate form
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const role = document.getElementById('userRole').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const isActive = document.getElementById('isActive').value === 'true';
+            
+            let hasErrors = false;
+            
+            if (!username) {
+                document.getElementById('username-error').textContent = 'Username is required';
+                hasErrors = true;
+            }
+            
+            if (!email) {
+                document.getElementById('email-error').textContent = 'Email is required';
+                hasErrors = true;
+            } else if (!isValidEmail(email)) {
+                document.getElementById('email-error').textContent = 'Invalid email format';
+                hasErrors = true;
+            }
+            
+            if (!fullName) {
+                document.getElementById('fullName-error').textContent = 'Full name is required';
+                hasErrors = true;
+            }
+            
+            if (!role) {
+                document.getElementById('role-error').textContent = 'Role is required';
+                hasErrors = true;
+            }
+            
+            if (modalMode === 'add' && !password) {
+                document.getElementById('password-error').textContent = 'Password is required';
+                hasErrors = true;
+            }
+            
+            if (password && password !== confirmPassword) {
+                document.getElementById('confirmPassword-error').textContent = 'Passwords do not match';
+                hasErrors = true;
+            }
+            
+            if (hasErrors) return;
+            
+            try {
+                const userData = {
+                    username,
+                    email,
+                    fullName,
+                    role,
+                    isActive
+                };
+                
+                if (password) {
+                    userData.password = password;
+                }
+                
+                let response;
+                if (modalMode === 'add') {
+                    response = await ELibAPI.post('/api/v1/user/register', userData);
+                } else {
+                    response = await ELibAPI.put(`/api/v1/user/${currentUserId}`, userData);
+                }
+                
+                if (response.success) {
+                    document.getElementById('userFormMessage').textContent = 
+                        modalMode === 'add' ? 'User created successfully!' : 'User updated successfully!';
+                    document.getElementById('userFormMessage').style.display = 'block';
+                    
+                    // Reload users list
+                    setTimeout(() => {
+                        closeUserModal();
+                        loadUsers();
+                    }, 1500);
+                } else {
+                    showError('Failed to save user: ' + response.message);
+                }
+            } catch (error) {
+                showError('Error saving user: ' + error.message);
+            }
+        }
+
+        async function deleteUser() {
+            if (!currentUserId) return;
+            
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            
+            try {
+                const response = await ELibAPI.delete(`/api/v1/user/${currentUserId}`);
+                if (response.success) {
+                    document.getElementById('userFormMessage').textContent = 'User deleted successfully!';
+                    document.getElementById('userFormMessage').style.display = 'block';
+                    
+                    setTimeout(() => {
+                        closeUserModal();
+                        loadUsers();
+                    }, 1500);
+                } else {
+                    showError('Failed to delete user: ' + response.message);
+                }
+            } catch (error) {
+                showError('Error deleting user: ' + error.message);
+            }
+        }
+
+        function isValidEmail(email) {
+            return true;
+        }
+
+        async function confirmDeleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            
+            try {
+                const response = await ELibAPI.delete(`/api/v1/user/${userId}`);
+                if (response.success) {
+                    showSuccess('User deleted successfully!');
+                    loadUsers();
+                } else {
+                    showError('Failed to delete user: ' + response.message);
+                }
+            } catch (error) {
+                showError('Error deleting user: ' + error.message);
+            }
+        }
+
+        function showSuccess(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="alert alert-success">${message}</div>`;
+            setTimeout(() => {
+                errorContainer.innerHTML = '';
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('userModal');
+            if (event.target === modal) {
+                closeUserModal();
+            }
+        }
+    </script>

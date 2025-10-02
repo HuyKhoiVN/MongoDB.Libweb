@@ -1,0 +1,481 @@
+@{
+    ViewData["Title"] = "Discover Books";
+    Layout = "~/Views/Library/_LibraryLayout.cshtml";
+}
+
+<style>
+        .library-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .library-header {
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .logo h2 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.5em;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-info span {
+            font-weight: bold;
+            color: #333;
+        }
+        .user-menu {
+            display: flex;
+            gap: 10px;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-outline {
+            padding: 8px 16px;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .btn-secondary {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+        .hero-title {
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .hero-subtitle {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .search-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .btn-search {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-search:hover {
+            background: #e55a00;
+            transform: translateY(-2px);
+        }
+        .featured-section {
+            margin-bottom: 40px;
+        }
+        .section-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        .book-cover {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #999;
+        }
+        .book-info {
+            padding: 20px;
+        }
+        .book-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+            line-height: 1.3;
+        }
+        .book-author {
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .book-year {
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        .book-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-borrow {
+            background: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-borrow:hover {
+            background: #e55a00;
+        }
+        .btn-borrow:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-view {
+            background: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-view:hover {
+            background: #5a6268;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+        .pagination button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary-color);
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+
+<div class="hero-section">
+            <h1 class="hero-title">Discover Your Next Great Read</h1>
+            <p class="hero-subtitle">Explore thousands of e-books in our digital library</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-form">
+                <input type="text" class="search-input" id="search-input" placeholder="Search for books, authors, or topics...">
+                <div class="search-filters">
+                    <select class="filter-select" id="category-filter">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select class="filter-select" id="year-filter">
+                        <option value="">All Years</option>
+                    </select>
+                </div>
+                <button class="btn-search" onclick="searchBooks()">Search</button>
+            </div>
+        </div>
+
+        <div id="error-container"></div>
+
+        <div class="featured-section">
+            <h2 class="section-title">Featured Books</h2>
+            <div id="featured-loading" class="loading">Loading featured books...</div>
+            <div class="books-grid" id="featured-books" style="display: none;"></div>
+        </div>
+
+        <div class="featured-section">
+            <h2 class="section-title">All Books</h2>
+            <div id="books-loading" class="loading">Loading books...</div>
+            <div class="books-grid" id="books-grid" style="display: none;"></div>
+        </div>
+
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prev-page" onclick="changePage(-1)">Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-page" onclick="changePage(1)">Next</button>
+        </div>
+
+    <script src="~/template/template.js"></script>
+    <script>
+        let currentPage = 1;
+        let currentLimit = 12;
+        let totalPages = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+            loadFeaturedBooks();
+            loadBooks();
+        });
+
+        async function loadCategories() {
+            try {
+                const response = await ELibAPI.get(ELibAPI.endpoints.category.getAll());
+                if (response.success) {
+                    const categorySelect = document.getElementById('category-filter');
+                    response.data.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function loadFeaturedBooks() {
+            try {
+                const response = await ELibAPI.get(ELibAPI.endpoints.book.getFeatured(6));
+                if (response.success) {
+                    displayBooks(response.data, 'featured-books');
+                    document.getElementById('featured-loading').style.display = 'none';
+                    document.getElementById('featured-books').style.display = 'grid';
+                }
+            } catch (error) {
+                console.error('Error loading featured books:', error);
+                document.getElementById('featured-loading').innerHTML = '<div class="error">Failed to load featured books</div>';
+            }
+        }
+
+        async function loadBooks() {
+            try {
+                const search = document.getElementById('search-input').value;
+                const category = document.getElementById('category-filter').value;
+                const year = document.getElementById('year-filter').value;
+                
+                // Show loading
+                document.getElementById('books-loading').style.display = 'block';
+                document.getElementById('books-grid').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+
+                // Build query parameters
+                let queryParams = '';
+                if (search) queryParams += `&search=${encodeURIComponent(search)}`;
+                if (category) queryParams += `&category=${encodeURIComponent(category)}`;
+                if (year) queryParams += `&year=${encodeURIComponent(year)}`;
+
+                const response = await ELibAPI.get(ELibAPI.endpoints.book.getAll(currentPage, currentLimit) + queryParams);
+                
+                if (response.success) {
+                    displayBooks(response.data, 'books-grid');
+                    updatePagination();
+                } else {
+                    showError('Failed to load books: ' + response.error);
+                }
+
+            } catch (error) {
+                console.error('Error loading books:', error);
+                showError('Failed to load books: ' + error.message);
+            } finally {
+                document.getElementById('books-loading').style.display = 'none';
+                document.getElementById('books-grid').style.display = 'grid';
+                document.getElementById('pagination').style.display = 'flex';
+            }
+        }
+
+        function displayBooks(books, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            if (!books || books.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">No books found</div>';
+                return;
+            }
+
+            books.forEach(book => {
+                const bookCard = document.createElement('div');
+                bookCard.className = 'book-card';
+                bookCard.innerHTML = `
+                    <div class="book-cover">📚</div>
+                    <div class="book-info">
+                        <div class="book-title" title="${book.title}">${book.title}</div>
+                        <div class="book-author">${Array.isArray(book.authors) ? book.authors.join(', ') : book.authors || 'Unknown Author'}</div>
+                        <div class="book-year">${book.publishYear || 'Unknown Year'}</div>
+                        <div class="book-actions">
+                            <button class="btn-view" onclick="viewBook('${book.id}')">View Details</button>
+                            <button class="btn-borrow" onclick="borrowBook('${book.id}')" ${!book.isAvailable ? 'disabled' : ''}>
+                                ${book.isAvailable ? 'Borrow' : 'Unavailable'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(bookCard);
+            });
+        }
+
+        function updatePagination() {
+            // This would be calculated based on total count from API
+            totalPages = Math.max(1, Math.ceil(100 / currentLimit)); // Assuming 100 total books
+            
+            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
+        }
+
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                loadBooks();
+            }
+        }
+
+        function searchBooks() {
+            currentPage = 1;
+            loadBooks();
+        }
+
+        function viewBook(bookId) {
+            window.location.href = `/Library/BookDetails/${bookId}`;
+        }
+
+        async function borrowBook(bookId) {
+            // Check if user is logged in
+            const userId = ELibAPI.getUserId();
+            if (!userId) {
+                alert('Please login to borrow books');
+                window.location.href = '/Library/Login';
+                return;
+            }
+
+            if (!confirm('Are you sure you want to borrow this book?')) {
+                return;
+            }
+
+            try {
+                const borrowData = {
+                    userId: userId,
+                    bookId: bookId,
+                    dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days from now
+                };
+
+                const response = await ELibAPI.post(ELibAPI.endpoints.borrow.borrow, borrowData);
+                if (response.success) {
+                    alert('Book borrowed successfully!');
+                    loadBooks();
+                } else {
+                    showError('Failed to borrow book: ' + response.error);
+                }
+            } catch (error) {
+                console.error('Error borrowing book:', error);
+                showError('Failed to borrow book: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+    </script>

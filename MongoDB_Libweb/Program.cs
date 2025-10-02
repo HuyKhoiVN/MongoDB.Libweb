@@ -10,6 +10,18 @@ builder.Services.AddControllersWithViews();
 // Add API controllers
 builder.Services.AddControllers();
 
+// Add HttpContextAccessor for current user service
+builder.Services.AddHttpContextAccessor();
+
+// Add session support
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -51,6 +63,10 @@ builder.Services.AddScoped<IBorrowService, BorrowService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IFileUploadService, FileUploadService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Register HttpClient for API calls
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
@@ -67,6 +83,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
 app.UseAuthorization();
 
 // Configure Swagger

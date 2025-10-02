@@ -55,23 +55,44 @@ namespace MongoDB_Libweb.Controllers
         }
 
         [HttpGet("user/{userId}")]
-        public async Task<ActionResult<ApiResponse<List<BorrowDto>>>> GetBorrowsByUser(string userId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
+        public async Task<ActionResult<ApiResponse<List<BorrowDetailDto>>>> GetBorrowsByUser(string userId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var result = await _borrowService.GetBorrowsByUserAsync(userId, page, limit);
+            var result = await _borrowService.GetBorrowsByUserWithDetailsAsync(userId, page, limit);
+            return Ok(result);
+        }
+
+        [HttpGet("user/{userId}/borrows")]
+        public async Task<ActionResult<ApiResponse<List<BorrowDto>>>> GetBorrowsByUserId(string userId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
+        {
+            var result = await _borrowService.GetBorrowsByUserIdAsync(userId, page, limit);
             return Ok(result);
         }
 
         [HttpGet("book/{bookId}")]
-        public async Task<ActionResult<ApiResponse<List<BorrowDto>>>> GetBorrowsByBook(string bookId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
+        public async Task<ActionResult<ApiResponse<List<BorrowDetailDto>>>> GetBorrowsByBook(string bookId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var result = await _borrowService.GetBorrowsByBookAsync(bookId, page, limit);
+            var result = await _borrowService.GetBorrowsByBookWithDetailsAsync(bookId, page, limit);
             return Ok(result);
         }
 
         [HttpGet("status/{status}")]
-        public async Task<ActionResult<ApiResponse<List<BorrowDto>>>> GetBorrowsByStatus(string status, [FromQuery] int page = 1, [FromQuery] int limit = 10)
+        public async Task<ActionResult<ApiResponse<List<BorrowDetailDto>>>> GetBorrowsByStatus(string status, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var result = await _borrowService.GetBorrowsByStatusAsync(status, page, limit);
+            var result = await _borrowService.GetBorrowsByStatusWithDetailsAsync(status, page, limit);
+            return Ok(result);
+        }
+
+        [HttpGet("all")]
+        public async Task<ActionResult<ApiResponse<List<BorrowDetailDto>>>> GetAllBorrows([FromQuery] int page = 1, [FromQuery] int limit = 10)
+        {
+            var result = await _borrowService.GetAllBorrowsWithDetailsAsync(page, limit);
+            return Ok(result);
+        }
+
+        [HttpGet("all/basic")]
+        public async Task<ActionResult<ApiResponse<List<BorrowDto>>>> GetAllBorrowsBasic([FromQuery] int page = 1, [FromQuery] int limit = 10)
+        {
+            var result = await _borrowService.GetAllBorrowsAsync(page, limit);
             return Ok(result);
         }
 
@@ -86,6 +107,27 @@ namespace MongoDB_Libweb.Controllers
         public async Task<ActionResult<ApiResponse<long>>> GetBorrowCount()
         {
             var result = await _borrowService.GetBorrowCountAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("count/active")]
+        public async Task<ActionResult<ApiResponse<long>>> GetActiveBorrowsCount()
+        {
+            var result = await _borrowService.GetActiveBorrowsCountAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("count/overdue")]
+        public async Task<ActionResult<ApiResponse<long>>> GetOverdueBorrowsCount()
+        {
+            var result = await _borrowService.GetOverdueBorrowsCountAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("date-range")]
+        public async Task<ActionResult<ApiResponse<List<BorrowDto>>>> GetBorrowsByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            var result = await _borrowService.GetBorrowsByDateRangeAsync(startDate, endDate);
             return Ok(result);
         }
 

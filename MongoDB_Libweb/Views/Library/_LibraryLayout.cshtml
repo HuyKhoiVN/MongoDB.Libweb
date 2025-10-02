@@ -1,0 +1,845 @@
+<script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+    if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+            var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+            var firstSheetName = workbook.SheetNames[0];
+            var worksheet = workbook.Sheets[firstSheetName];
+
+            // Convert sheet to JSON to filter blank rows
+            var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+            // Filter out blank rows (rows where all cells are empty, null, or undefined)
+            var filteredData = jsonData.filter(row => row.some(filledCell));
+
+            // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+            var headerRowIndex = filteredData.findIndex((row, index) =>
+              row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+            );
+            // Fallback
+            if (headerRowIndex === -1 || headerRowIndex > 25) {
+              headerRowIndex = 0;
+            }
+
+            // Convert filtered JSON back to CSV
+            var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+            csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+            return csv;
+        } catch (e) {
+            console.error(e);
+            return "";
+        }
+    }
+    return gk_fileData[filename] || "";
+    }
+</script>
+
+<script type="text/javascript">
+    // API Configuration for Electronic Library System
+    window.ELibAPI = {
+        baseUrl: '/api/v1',
+        endpoints: {
+            // User API
+            user: {
+                login: '/api/v1/user/login',
+                register: '/api/v1/user/register',
+                getById: (id) => `/api/v1/user/${id}`,
+                getByUsername: (username) => `/api/v1/user/username/${username}`,
+                getByEmail: (email) => `/api/v1/user/email/${email}`,
+                getCurrent: '/api/v1/user/current',
+                getAll: (page = 1, limit = 10) => `/api/v1/user?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/user/${id}`,
+                delete: (id) => `/api/v1/user/${id}`,
+                count: '/api/v1/user/count',
+                changePassword: (id) => `/api/v1/user/${id}/change-password`
+            },
+            // Book API
+            book: {
+                create: '/api/v1/book',
+                getById: (id) => `/api/v1/book/${id}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/book?page=${page}&limit=${limit}`,
+                search: '/api/v1/book/search',
+                update: (id) => `/api/v1/book/${id}`,
+                delete: (id) => `/api/v1/book/${id}`,
+                count: '/api/v1/book/count',
+                getByCategory: (categoryId, page = 1, limit = 10) => `/api/v1/book/category/${categoryId}?page=${page}&limit=${limit}`,
+                getByAuthor: (authorId, page = 1, limit = 10) => `/api/v1/book/author/${authorId}?page=${page}&limit=${limit}`,
+                getFeatured: (limit = 6) => `/api/v1/book/featured?limit=${limit}`,
+                setAvailability: (id) => `/api/v1/book/${id}/availability`
+            },
+            // Category API
+            category: {
+                create: '/api/v1/category',
+                getById: (id) => `/api/v1/category/${id}`,
+                getByName: (name) => `/api/v1/category/name/${name}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/category?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/category/${id}`,
+                delete: (id) => `/api/v1/category/${id}`,
+                count: '/api/v1/category/count'
+            },
+            // Author API
+            author: {
+                create: '/api/v1/author',
+                getById: (id) => `/api/v1/author/${id}`,
+                getByName: (name) => `/api/v1/author/name/${name}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/author?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/author/${id}`,
+                delete: (id) => `/api/v1/author/${id}`,
+                count: '/api/v1/author/count'
+            },
+            // Borrow API
+            borrow: {
+                borrow: '/api/v1/borrow/borrow',
+                return: '/api/v1/borrow/return',
+                getById: (id) => `/api/v1/borrow/${id}`,
+                getByUser: (userId, page = 1, limit = 10) => `/api/v1/borrow/user/${userId}?page=${page}&limit=${limit}`,
+                getByUserId: (userId, page = 1, limit = 10) => `/api/v1/borrow/user/${userId}/borrows?page=${page}&limit=${limit}`,
+                getByBook: (bookId, page = 1, limit = 10) => `/api/v1/borrow/book/${bookId}?page=${page}&limit=${limit}`,
+                getByStatus: (status, page = 1, limit = 10) => `/api/v1/borrow/status/${status}?page=${page}&limit=${limit}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/borrow/all?page=${page}&limit=${limit}`,
+                getOverdue: '/api/v1/borrow/overdue',
+                count: '/api/v1/borrow/count',
+                countActive: '/api/v1/borrow/count/active',
+                countOverdue: '/api/v1/borrow/count/overdue',
+                getByDateRange: (startDate, endDate) => `/api/v1/borrow/date-range?startDate=${startDate}&endDate=${endDate}`,
+                canBorrow: (userId, bookId) => `/api/v1/borrow/can-borrow?userId=${userId}&bookId=${bookId}`,
+                search: '/api/v1/borrow/search'
+            }
+        },
+
+        // Helper functions for API calls
+        async request(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            // Add user ID to headers if available
+            const userId = this.getUserId();
+            if (userId) {
+                defaultOptions.headers['X-User-Id'] = userId;
+            }
+
+            const mergedOptions = { ...defaultOptions, ...options };
+            if (mergedOptions.body && typeof mergedOptions.body === 'object') {
+                mergedOptions.body = JSON.stringify(mergedOptions.body);
+            }
+
+            try {
+                const response = await fetch(url, mergedOptions);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'API request failed');
+                }
+
+                return data;
+            } catch (error) {
+                console.error('API request error:', error);
+                throw error;
+            }
+        },
+
+        getAuthToken() {
+            return localStorage.getItem('authToken') || '';
+        },
+
+        setAuthToken(token) {
+            localStorage.setItem('authToken', token);
+        },
+
+        clearAuthToken() {
+            localStorage.removeItem('authToken');
+        },
+        
+        // User ID management (replacing token-based auth)
+        getUserId() {
+            return localStorage.getItem('userId') || '';
+        },
+        
+        setUserId(userId) {
+            localStorage.setItem('userId', userId);
+        },
+        
+        clearUserId() {
+            localStorage.removeItem('userId');
+        },
+        
+        // User info management
+        getUserInfo() {
+            const userInfo = localStorage.getItem('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        },
+        
+        setUserInfo(userInfo) {
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        },
+        
+        clearUserInfo() {
+            localStorage.removeItem('userInfo');
+        },
+        
+        // Clear all user data
+        clearAllUserData() {
+            this.clearAuthToken();
+            this.clearUserId();
+            this.clearUserInfo();
+        },
+
+        // Common API methods
+        async get(url) {
+            return this.request(url, { method: 'GET' });
+        },
+
+        async post(url, data) {
+            return this.request(url, { method: 'POST', body: data });
+        },
+
+        async put(url, data) {
+            return this.request(url, { method: 'PUT', body: data });
+        },
+
+        async delete(url) {
+            return this.request(url, { method: 'DELETE' });
+        }
+    };
+</script>
+
+@* Library Layout following UI rules from ui_rules_user_screens_flow.md *@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Electronic Library</title>
+    <link rel="stylesheet" href="~/template/template.css">
+    <script src="~/template/template.js" defer></script>
+    <style>
+        /* Library-specific styles following design rules */
+        .library-container {
+            min-height: 100vh;
+            background: #F5F5F5;
+        }
+        
+        .library-header {
+            background: linear-gradient(135deg, #FF6B00, #FF8C00);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 4px 20px rgba(255, 107, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .library-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .library-main-nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .library-logo {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .library-search {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 20px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.9);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            background: white;
+        }
+        
+        .search-button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #FF6B00;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .library-user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn-login {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn-login:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-register {
+            background: white;
+            color: #FF6B00;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .btn-register:hover {
+            background: #f0f0f0;
+            color: #FF6B00;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .user-menu {
+            position: relative;
+        }
+        
+        .user-menu-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            min-width: 200px;
+            display: none;
+            z-index: 1001;
+        }
+        
+        .user-dropdown.show {
+            display: block;
+        }
+        
+        .user-dropdown a {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .user-dropdown a:hover {
+            background: #F5F5F5;
+            color: #FF6B00;
+        }
+        
+        .user-dropdown a:last-child {
+            border-bottom: none;
+        }
+        
+        .library-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #FFDAB9, #FFE4B5);
+            padding: 60px 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 107, 0, 0.1);
+            border-radius: 50%;
+        }
+        
+        .hero-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-search {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .book-cover {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #F5F5F5;
+        }
+        
+        .book-info {
+            padding: 20px;
+        }
+        
+        .book-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        
+        .book-author {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .book-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .book-category {
+            padding: 2px 8px;
+            background: #FFDAB9;
+            color: #FF6B00;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .book-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-borrow {
+            background: #FF6B00;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-borrow:hover {
+            background: #FF4500;
+            transform: translateY(-1px);
+        }
+        
+        .btn-borrow:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-details {
+            background: transparent;
+            color: #FF6B00;
+            border: 2px solid #FF6B00;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-details:hover {
+            background: #FF6B00;
+            color: white;
+        }
+        
+        .category-sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .category-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .category-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .category-item {
+            margin-bottom: 10px;
+        }
+        
+        .category-link {
+            display: block;
+            padding: 10px 15px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .category-link:hover,
+        .category-link.active {
+            background: #FFDAB9;
+            color: #FF6B00;
+            font-weight: bold;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 40px 0;
+        }
+        
+        .pagination a,
+        .pagination span {
+            padding: 10px 15px;
+            border: 2px solid #FF6B00;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #FF6B00;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination a:hover {
+            background: #FF6B00;
+            color: white;
+        }
+        
+        .pagination .current {
+            background: #FF6B00;
+            color: white;
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        @@media (max-width: 768px) {
+            .library-nav {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            
+            .library-main-nav {
+                display: none;
+            }
+            
+            .library-search {
+                order: 3;
+                width: 100%;
+                max-width: none;
+                margin: 0;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .hero-title {
+                font-size: 36px;
+            }
+            
+            .books-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 20px;
+            }
+            
+            .library-main {
+                padding: 20px 15px;
+            }
+            
+            .auth-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .btn-login,
+            .btn-register {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="library-container">
+        <!-- Header -->
+        <header class="library-header">
+            <nav class="library-nav">
+                <a href="@Url.Action("Index", "Library")" class="library-logo">📚 Electronic Library</a>
+                
+                <!-- Main Navigation Menu (Horizontal) -->
+                <div class="library-main-nav">
+                    <a href="@Url.Action("Index", "Library")" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">Home</a>
+                    <a href="@Url.Action("Categories", "Library")" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Categories" ? "active" : "")">Categories</a>
+                    <a href="@Url.Action("Authors", "Library")" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Authors" ? "active" : "")">Authors</a>
+                    <a href="@Url.Action("About", "Library")" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "About" ? "active" : "")">About</a>
+                </div>
+                
+                <div class="library-search">
+                    <form method="get" action="@Url.Action("Search", "Library")">
+                        <input type="text" name="q" class="search-input" placeholder="Search books, authors, categories..." value="@ViewBag.SearchQuery">
+                        <button type="submit" class="search-button">🔍</button>
+                    </form>
+                </div>
+                
+                <div class="library-user-menu">
+                    <div id="userMenuContainer">
+                        <!-- User menu will be populated by JavaScript -->
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="library-main">
+            @RenderBody()
+        </main>
+
+        <!-- Footer -->
+        <footer style="background: #333; color: white; padding: 40px 20px; text-align: center; margin-top: 60px;">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-bottom: 30px;">
+                    <div>
+                        <h3 style="color: #FF6B00; margin-bottom: 15px;">Electronic Library</h3>
+                        <p style="color: #ccc; line-height: 1.6;">Discover thousands of digital books and expand your knowledge with our modern library platform.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #FF6B00; margin-bottom: 15px;">Quick Links</h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <a href="@Url.Action("Index", "Library")" style="color: #ccc; text-decoration: none;">Browse Books</a>
+                            <a href="@Url.Action("Categories", "Library")" style="color: #ccc; text-decoration: none;">Categories</a>
+                            <a href="@Url.Action("Authors", "Library")" style="color: #ccc; text-decoration: none;">Authors</a>
+                            <a href="@Url.Action("Help", "Library")" style="color: #ccc; text-decoration: none;">Help</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: #FF6B00; margin-bottom: 15px;">Support</h4>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <a href="@Url.Action("Contact", "Library")" style="color: #ccc; text-decoration: none;">Contact Us</a>
+                            <a href="@Url.Action("Privacy", "Library")" style="color: #ccc; text-decoration: none;">Privacy Policy</a>
+                            <a href="@Url.Action("Terms", "Library")" style="color: #ccc; text-decoration: none;">Terms of Service</a>
+                        </div>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid #555; padding-top: 20px; color: #999;">
+                    <p>&copy; 2025 Electronic Library. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const button = document.querySelector('.user-menu-button');
+            
+            if (!button.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Search functionality
+        document.querySelector('.search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.closest('form').submit();
+            }
+        });
+
+        // User menu functionality
+        function updateUserMenu() {
+            const container = document.getElementById('userMenuContainer');
+            const userInfo = ELibAPI.getUserInfo();
+            
+            if (userInfo) {
+                // User is logged in
+                container.innerHTML = `
+                    <div class="user-menu">
+                        <button class="user-menu-button" onclick="toggleUserMenu()">
+                            <div class="user-avatar">
+                                ${userInfo.username ? userInfo.username.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <span>${userInfo.username || 'User'}</span>
+                            <span>▼</span>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="@Url.Action("Profile", "Library")">My Profile</a>
+                            <a href="@Url.Action("BorrowHistory", "Library")">Borrow History</a>
+                            ${userInfo.role === 'Admin' ? '<a href="@Url.Action("Dashboard", "Admin")">Admin Panel</a>' : ''}
+                            <a href="@Url.Action("Help", "Library")">Help</a>
+                            <a href="javascript:void(0)" onclick="handleLogout()">Logout</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // User is not logged in
+                container.innerHTML = `
+                    <div class="auth-buttons">
+                        <a href="@Url.Action("Login", "Library")" class="btn-login">Login</a>
+                        <a href="@Url.Action("Register", "Library")" class="btn-register">Register</a>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        function handleLogout() {
+            ELibAPI.clearAllUserData();
+            window.location.href = '@Url.Action("Index", "Library")';
+        }
+
+        // Initialize user menu on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUserMenu();
+        });
+    </script>
+</body>
+</html>

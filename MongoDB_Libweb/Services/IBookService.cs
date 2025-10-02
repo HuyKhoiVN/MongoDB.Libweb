@@ -12,8 +12,9 @@ namespace MongoDB_Libweb.Services
         Task<ApiResponse<BookDto>> UpdateBookAsync(string id, BookUpdateDto dto);
         Task<ApiResponse<bool>> DeleteBookAsync(string id);
         Task<ApiResponse<long>> GetBookCountAsync();
-        Task<ApiResponse<List<BookDto>>> GetBooksByCategoryAsync(string categoryId);
-        Task<ApiResponse<List<BookDto>>> GetBooksByAuthorAsync(string authorId);
+        Task<ApiResponse<List<BookDto>>> GetBooksByCategoryAsync(string categoryId, int page = 1, int limit = 10);
+        Task<ApiResponse<List<BookDto>>> GetBooksByAuthorAsync(string authorId, int page = 1, int limit = 10);
+        Task<ApiResponse<List<BookDto>>> GetFeaturedBooksAsync(int limit = 6);
         Task<ApiResponse<bool>> SetBookAvailabilityAsync(string bookId, bool isAvailable);
     }
 }

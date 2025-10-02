@@ -1,0 +1,219 @@
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Library/_LibraryLayout.cshtml";
+}
+
+<style>
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-title {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .auth-subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .btn-login {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .btn-login:hover {
+            background: #e55a00;
+            transform: translateY(-2px);
+        }
+        .auth-links {
+            text-align: center;
+        }
+        .auth-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .back-home {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-home a {
+            color: #666;
+            text-decoration: none;
+        }
+        .back-home a:hover {
+            color: var(--primary-color);
+        }
+    </style>
+
+<div class="auth-container">
+        <div class="auth-header">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to your account</p>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="error">@TempData["Error"]</div>
+        }
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="success">@TempData["Success"]</div>
+        }
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="button" class="btn-login" onclick="handleLogin()">Sign In</button>
+        </form>
+
+        <div class="auth-links">
+            <p>Don't have an account? <a href="@Url.Action("Register", "Library")">Sign up here</a></p>
+        </div>
+
+        <div class="back-home">
+            <a href="@Url.Action("Index", "Library")">← Back to Library</a>
+        </div>
+
+    <script src="~/template/template.js"></script>
+    <script>
+        async function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showError('Please enter both username and password');
+                return;
+            }
+            
+            try {
+                const response = await ELibAPI.post('/api/v1/user/login', { username, password });
+                
+                if (response.success) {
+                    // Store user ID instead of token
+                    ELibAPI.setUserId(response.data.id);
+                    ELibAPI.setUserInfo(response.data);
+                    
+                    showSuccess('Login successful! Redirecting...');
+                    
+                    // Redirect based on role
+                    setTimeout(() => {
+                        if (response.data.role === 'Admin') {
+                            window.location.href = '/Admin/Dashboard';
+                        } else {
+                            window.location.href = '/Library/Index';
+                        }
+                    }, 1500);
+                } else {
+                    showError(response.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Login failed: ' + error.message);
+            }
+        }
+        
+        function showError(message) {
+            // Remove existing messages
+            const existingError = document.querySelector('.error');
+            const existingSuccess = document.querySelector('.success');
+            if (existingError) existingError.remove();
+            if (existingSuccess) existingSuccess.remove();
+            
+            // Create error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            
+            // Insert before form
+            const form = document.getElementById('loginForm');
+            form.parentNode.insertBefore(errorDiv, form);
+        }
+        
+        function showSuccess(message) {
+            // Remove existing messages
+            const existingError = document.querySelector('.error');
+            const existingSuccess = document.querySelector('.success');
+            if (existingError) existingError.remove();
+            if (existingSuccess) existingSuccess.remove();
+            
+            // Create success message
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            
+            // Insert before form
+            const form = document.getElementById('loginForm');
+            form.parentNode.insertBefore(successDiv, form);
+        }
+        
+        // Handle Enter key press
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });
+    </script>

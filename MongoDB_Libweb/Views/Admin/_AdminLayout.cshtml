@@ -1,0 +1,759 @@
+<script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+    if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+            var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+            var firstSheetName = workbook.SheetNames[0];
+            var worksheet = workbook.Sheets[firstSheetName];
+
+            // Convert sheet to JSON to filter blank rows
+            var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+            // Filter out blank rows (rows where all cells are empty, null, or undefined)
+            var filteredData = jsonData.filter(row => row.some(filledCell));
+
+            // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+            var headerRowIndex = filteredData.findIndex((row, index) =>
+              row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+            );
+            // Fallback
+            if (headerRowIndex === -1 || headerRowIndex > 25) {
+              headerRowIndex = 0;
+            }
+
+            // Convert filtered JSON back to CSV
+            var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+            csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+            return csv;
+        } catch (e) {
+            console.error(e);
+            return "";
+        }
+    }
+    return gk_fileData[filename] || "";
+    }
+</script>
+
+<script type="text/javascript">
+    // API Configuration for Electronic Library System
+    window.ELibAPI = {
+        baseUrl: '/api/v1',
+        endpoints: {
+            // User API
+            user: {
+                login: '/api/v1/user/login',
+                register: '/api/v1/user/register',
+                getById: (id) => `/api/v1/user/${id}`,
+                getByUsername: (username) => `/api/v1/user/username/${username}`,
+                getByEmail: (email) => `/api/v1/user/email/${email}`,
+                getCurrent: '/api/v1/user/current',
+                getAll: (page = 1, limit = 10) => `/api/v1/user?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/user/${id}`,
+                delete: (id) => `/api/v1/user/${id}`,
+                count: '/api/v1/user/count',
+                changePassword: (id) => `/api/v1/user/${id}/change-password`
+            },
+            // Book API
+            book: {
+                create: '/api/v1/book',
+                getById: (id) => `/api/v1/book/${id}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/book?page=${page}&limit=${limit}`,
+                search: '/api/v1/book/search',
+                update: (id) => `/api/v1/book/${id}`,
+                delete: (id) => `/api/v1/book/${id}`,
+                count: '/api/v1/book/count',
+                getByCategory: (categoryId, page = 1, limit = 10) => `/api/v1/book/category/${categoryId}?page=${page}&limit=${limit}`,
+                getByAuthor: (authorId, page = 1, limit = 10) => `/api/v1/book/author/${authorId}?page=${page}&limit=${limit}`,
+                getFeatured: (limit = 6) => `/api/v1/book/featured?limit=${limit}`,
+                setAvailability: (id) => `/api/v1/book/${id}/availability`
+            },
+            // Category API
+            category: {
+                create: '/api/v1/category',
+                getById: (id) => `/api/v1/category/${id}`,
+                getByName: (name) => `/api/v1/category/name/${name}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/category?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/category/${id}`,
+                delete: (id) => `/api/v1/category/${id}`,
+                count: '/api/v1/category/count'
+            },
+            // Author API
+            author: {
+                create: '/api/v1/author',
+                getById: (id) => `/api/v1/author/${id}`,
+                getByName: (name) => `/api/v1/author/name/${name}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/author?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/author/${id}`,
+                delete: (id) => `/api/v1/author/${id}`,
+                count: '/api/v1/author/count'
+            },
+            // Borrow API
+            borrow: {
+                borrow: '/api/v1/borrow/borrow',
+                return: '/api/v1/borrow/return',
+                getById: (id) => `/api/v1/borrow/${id}`,
+                getByUser: (userId, page = 1, limit = 10) => `/api/v1/borrow/user/${userId}?page=${page}&limit=${limit}`,
+                getByUserId: (userId, page = 1, limit = 10) => `/api/v1/borrow/user/${userId}/borrows?page=${page}&limit=${limit}`,
+                getByBook: (bookId, page = 1, limit = 10) => `/api/v1/borrow/book/${bookId}?page=${page}&limit=${limit}`,
+                getByStatus: (status, page = 1, limit = 10) => `/api/v1/borrow/status/${status}?page=${page}&limit=${limit}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/borrow/all?page=${page}&limit=${limit}`,
+                getOverdue: '/api/v1/borrow/overdue',
+                count: '/api/v1/borrow/count',
+                countActive: '/api/v1/borrow/count/active',
+                countOverdue: '/api/v1/borrow/count/overdue',
+                getByDateRange: (startDate, endDate) => `/api/v1/borrow/date-range?startDate=${startDate}&endDate=${endDate}`,
+                canBorrow: (userId, bookId) => `/api/v1/borrow/can-borrow?userId=${userId}&bookId=${bookId}`,
+                search: '/api/v1/borrow/search'
+            }
+        },
+
+        // Helper functions for API calls
+        async request(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            // Add user ID to headers if available
+            const userId = this.getUserId();
+            if (userId) {
+                defaultOptions.headers['X-User-Id'] = userId;
+            }
+
+            const mergedOptions = { ...defaultOptions, ...options };
+            if (mergedOptions.body && typeof mergedOptions.body === 'object') {
+                mergedOptions.body = JSON.stringify(mergedOptions.body);
+            }
+
+            try {
+                const response = await fetch(url, mergedOptions);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'API request failed');
+                }
+
+                return data;
+            } catch (error) {
+                console.error('API request error:', error);
+                throw error;
+            }
+        },
+
+        getAuthToken() {
+            return localStorage.getItem('authToken') || '';
+        },
+
+        setAuthToken(token) {
+            localStorage.setItem('authToken', token);
+        },
+
+        clearAuthToken() {
+            localStorage.removeItem('authToken');
+        },
+        
+        // User ID management (replacing token-based auth)
+        getUserId() {
+            return localStorage.getItem('userId') || '';
+        },
+        
+        setUserId(userId) {
+            localStorage.setItem('userId', userId);
+        },
+        
+        clearUserId() {
+            localStorage.removeItem('userId');
+        },
+        
+        // User info management
+        getUserInfo() {
+            const userInfo = localStorage.getItem('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        },
+        
+        setUserInfo(userInfo) {
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        },
+        
+        clearUserInfo() {
+            localStorage.removeItem('userInfo');
+        },
+        
+        // Clear all user data
+        clearAllUserData() {
+            this.clearAuthToken();
+            this.clearUserId();
+            this.clearUserInfo();
+        },
+
+        // Common API methods
+        async get(url) {
+            return this.request(url, { method: 'GET' });
+        },
+
+        async post(url, data) {
+            return this.request(url, { method: 'POST', body: data });
+        },
+
+        async put(url, data) {
+            return this.request(url, { method: 'PUT', body: data });
+        },
+
+        async delete(url) {
+            return this.request(url, { method: 'DELETE' });
+        }
+    };
+</script>
+
+@* Admin Layout following UI rules from ui_rules_admin_screens_flow.md *@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Admin Dashboard</title>
+    <link rel="stylesheet" href="~/template/template.css">
+    <script src="~/template/template.js" defer></script>
+    <style>
+        /* Admin-specific styles following design rules */
+        .admin-container {
+            min-height: 100vh;
+            background: #F5F5F5;
+        }
+        
+        .admin-sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #FF6B00, #FF8C00);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .admin-sidebar .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .logo-icon {
+            font-size: 24px;
+        }
+        
+        .logo-text {
+            font-size: 16px;
+        }
+        
+        .admin-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .admin-nav li {
+            margin: 0;
+        }
+        
+        .nav-section {
+            margin: 20px 0 10px 0;
+            padding: 0 25px;
+        }
+        
+        .nav-section-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .admin-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            background: rgba(255,255,255,0.1);
+            border-left-color: white;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .nav-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .nav-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .nav-logout {
+            color: #ff6b6b !important;
+        }
+        
+        .nav-logout:hover {
+            background: rgba(255, 107, 107, 0.1) !important;
+            border-left-color: #ff6b6b !important;
+        }
+        
+        .admin-main {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .admin-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        
+        .admin-user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #FF6B00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .admin-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #FF6B00, #FF8C00);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(255, 107, 0, 0.2);
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background: #F5F5F5;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .data-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .btn-admin {
+            background: #FF6B00;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-admin:hover {
+            background: #FF4500;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #FF6B00;
+            border: 2px solid #FF6B00;
+        }
+        
+        .btn-secondary:hover {
+            background: #FF6B00;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #FF6B00;
+        }
+        
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            background: white;
+            min-width: 150px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .pagination a,
+        .pagination span {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .pagination a:hover {
+            background: #FF6B00;
+            color: white;
+            border-color: #FF6B00;
+        }
+        
+        .pagination .current {
+            background: #FF6B00;
+            color: white;
+            border-color: #FF6B00;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #FF6B00;
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            background: #FF6B00;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        @@media (max-width: 768px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .admin-sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .admin-main {
+                margin-left: 0;
+                padding: 10px;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .admin-header {
+                padding: 15px 20px;
+            }
+            
+            .admin-title {
+                font-size: 24px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-bar {
+                flex-direction: column;
+            }
+            
+            .search-input,
+            .filter-select {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar" id="adminSidebar">
+            <div class="logo">
+                <span class="logo-icon">📚</span>
+                <span class="logo-text">ELIB ADMIN</span>
+            </div>
+            
+            <!-- Admin Navigation Menu (Vertical) -->
+            <ul class="admin-nav">
+                <li class="nav-section">
+                    <span class="nav-section-title">Overview</span>
+                </li>
+                <li><a href="@Url.Action("Dashboard", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a></li>
+                
+                <li class="nav-section">
+                    <span class="nav-section-title">Management</span>
+                </li>
+                <li><a href="@Url.Action("UserManagement", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "UserManagement" ? "active" : "")">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Users</span>
+                </a></li>
+                <li><a href="@Url.Action("BookManagement", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "BookManagement" ? "active" : "")">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Books</span>
+                </a></li>
+                <li><a href="@Url.Action("CategoryManagement", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "CategoryManagement" ? "active" : "")">
+                    <span class="nav-icon">🏷️</span>
+                    <span class="nav-text">Categories</span>
+                </a></li>
+                <li><a href="@Url.Action("AuthorManagement", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "AuthorManagement" ? "active" : "")">
+                    <span class="nav-icon">✍️</span>
+                    <span class="nav-text">Authors</span>
+                </a></li>
+                <li><a href="@Url.Action("BorrowManagement", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "BorrowManagement" ? "active" : "")">
+                    <span class="nav-icon">📖</span>
+                    <span class="nav-text">Borrows</span>
+                </a></li>
+                
+                <li class="nav-section">
+                    <span class="nav-section-title">Analytics</span>
+                </li>
+                <li><a href="@Url.Action("Reports", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Reports" ? "active" : "")">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Reports</span>
+                </a></li>
+                
+                <li class="nav-section">
+                    <span class="nav-section-title">Account</span>
+                </li>
+                <li><a href="@Url.Action("Profile", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Profile" ? "active" : "")">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Settings</span>
+                </a></li>
+                <li><a href="@Url.Action("Logout", "Admin")" class="nav-logout">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">Logout</span>
+                </a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <header class="admin-header">
+                <div>
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
+                    <h1 class="admin-title">@ViewData["Title"]</h1>
+                </div>
+                <div class="admin-user-info">
+                    <div class="admin-avatar">
+                        @(Context.Session.GetString("Username")?.Substring(0, 1).ToUpper() ?? "A")
+                    </div>
+                    <div>
+                        <div style="font-weight: bold;">@(Context.Session.GetString("Username") ?? "Admin")</div>
+                        <div style="font-size: 12px; color: #666;">Administrator</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="admin-content">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Success"]</div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-error">@TempData["Error"]</div>
+                }
+
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('adminSidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease';
+                    setTimeout(() => alert.remove(), 500);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

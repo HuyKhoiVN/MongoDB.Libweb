@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MongoDB_Libweb.DTOs
 {
@@ -11,6 +13,39 @@ namespace MongoDB_Libweb.DTOs
         public DateTime DueDate { get; set; }
         public DateTime? ReturnDate { get; set; }
         public string Status { get; set; } = null!;
+    }
+
+    public class BorrowDetailDto
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; } = null!;
+
+        [BsonElement("userId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string UserId { get; set; } = null!;
+
+        [BsonElement("bookId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string BookId { get; set; } = null!;
+
+        [BsonElement("borrowDate")]
+        public DateTime BorrowDate { get; set; }
+
+        [BsonElement("dueDate")]
+        public DateTime DueDate { get; set; }
+
+        [BsonElement("returnDate")]
+        public DateTime? ReturnDate { get; set; }
+
+        [BsonElement("status")]
+        public string Status { get; set; } = null!;
+
+        [BsonElement("user")]
+        public UserDto User { get; set; } = null!;
+
+        [BsonElement("book")]
+        public BookDto Book { get; set; } = null!;
     }
 
     public class BorrowCreateDto

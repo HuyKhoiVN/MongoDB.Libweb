@@ -1,4 +1,217 @@
-﻿<!DOCTYPE html>
+﻿<script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+    if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+            var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+            var firstSheetName = workbook.SheetNames[0];
+            var worksheet = workbook.Sheets[firstSheetName];
+
+            // Convert sheet to JSON to filter blank rows
+            var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+            // Filter out blank rows (rows where all cells are empty, null, or undefined)
+            var filteredData = jsonData.filter(row => row.some(filledCell));
+
+            // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+            var headerRowIndex = filteredData.findIndex((row, index) =>
+              row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+            );
+            // Fallback
+            if (headerRowIndex === -1 || headerRowIndex > 25) {
+              headerRowIndex = 0;
+            }
+
+            // Convert filtered JSON back to CSV
+            var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+            csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+            return csv;
+        } catch (e) {
+            console.error(e);
+            return "";
+        }
+    }
+    return gk_fileData[filename] || "";
+    }
+</script>
+
+<script type="text/javascript">
+    // API Configuration for Electronic Library System
+    window.ELibAPI = {
+        baseUrl: '/api/v1',
+        endpoints: {
+            // User API
+            user: {
+                login: '/api/v1/user/login',
+                register: '/api/v1/user/register',
+                getById: (id) => `/api/v1/user/${id}`,
+                getByUsername: (username) => `/api/v1/user/username/${username}`,
+                getByEmail: (email) => `/api/v1/user/email/${email}`,
+                getCurrent: '/api/v1/user/current',
+                getAll: (page = 1, limit = 10) => `/api/v1/user?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/user/${id}`,
+                delete: (id) => `/api/v1/user/${id}`,
+                count: '/api/v1/user/count',
+                changePassword: (id) => `/api/v1/user/${id}/change-password`
+            },
+            // Book API
+            book: {
+                create: '/api/v1/book',
+                getById: (id) => `/api/v1/book/${id}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/book?page=${page}&limit=${limit}`,
+                search: '/api/v1/book/search',
+                update: (id) => `/api/v1/book/${id}`,
+                delete: (id) => `/api/v1/book/${id}`,
+                count: '/api/v1/book/count',
+                getByCategory: (categoryId, page = 1, limit = 10) => `/api/v1/book/category/${categoryId}?page=${page}&limit=${limit}`,
+                getByAuthor: (authorId, page = 1, limit = 10) => `/api/v1/book/author/${authorId}?page=${page}&limit=${limit}`,
+                getFeatured: (limit = 6) => `/api/v1/book/featured?limit=${limit}`,
+                setAvailability: (id) => `/api/v1/book/${id}/availability`
+            },
+            // Category API
+            category: {
+                create: '/api/v1/category',
+                getById: (id) => `/api/v1/category/${id}`,
+                getByName: (name) => `/api/v1/category/name/${name}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/category?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/category/${id}`,
+                delete: (id) => `/api/v1/category/${id}`,
+                count: '/api/v1/category/count'
+            },
+            // Author API
+            author: {
+                create: '/api/v1/author',
+                getById: (id) => `/api/v1/author/${id}`,
+                getByName: (name) => `/api/v1/author/name/${name}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/author?page=${page}&limit=${limit}`,
+                update: (id) => `/api/v1/author/${id}`,
+                delete: (id) => `/api/v1/author/${id}`,
+                count: '/api/v1/author/count'
+            },
+            // Borrow API
+            borrow: {
+                borrow: '/api/v1/borrow/borrow',
+                return: '/api/v1/borrow/return',
+                getById: (id) => `/api/v1/borrow/${id}`,
+                getByUser: (userId, page = 1, limit = 10) => `/api/v1/borrow/user/${userId}?page=${page}&limit=${limit}`,
+                getByUserId: (userId, page = 1, limit = 10) => `/api/v1/borrow/user/${userId}/borrows?page=${page}&limit=${limit}`,
+                getByBook: (bookId, page = 1, limit = 10) => `/api/v1/borrow/book/${bookId}?page=${page}&limit=${limit}`,
+                getByStatus: (status, page = 1, limit = 10) => `/api/v1/borrow/status/${status}?page=${page}&limit=${limit}`,
+                getAll: (page = 1, limit = 10) => `/api/v1/borrow/all?page=${page}&limit=${limit}`,
+                getOverdue: '/api/v1/borrow/overdue',
+                count: '/api/v1/borrow/count',
+                countActive: '/api/v1/borrow/count/active',
+                countOverdue: '/api/v1/borrow/count/overdue',
+                getByDateRange: (startDate, endDate) => `/api/v1/borrow/date-range?startDate=${startDate}&endDate=${endDate}`,
+                canBorrow: (userId, bookId) => `/api/v1/borrow/can-borrow?userId=${userId}&bookId=${bookId}`,
+                search: '/api/v1/borrow/search'
+            }
+        },
+
+        // Helper functions for API calls
+        async request(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            // Add user ID to headers if available
+            const userId = this.getUserId();
+            if (userId) {
+                defaultOptions.headers['X-User-Id'] = userId;
+            }
+
+            const mergedOptions = { ...defaultOptions, ...options };
+            if (mergedOptions.body && typeof mergedOptions.body === 'object') {
+                mergedOptions.body = JSON.stringify(mergedOptions.body);
+            }
+
+            try {
+                const response = await fetch(url, mergedOptions);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'API request failed');
+                }
+
+                return data;
+            } catch (error) {
+                console.error('API request error:', error);
+                throw error;
+            }
+        },
+
+        getAuthToken() {
+            return localStorage.getItem('authToken') || '';
+        },
+
+        setAuthToken(token) {
+            localStorage.setItem('authToken', token);
+        },
+
+        clearAuthToken() {
+            localStorage.removeItem('authToken');
+        },
+        
+        // User ID management (replacing token-based auth)
+        getUserId() {
+            return localStorage.getItem('userId') || '';
+        },
+        
+        setUserId(userId) {
+            localStorage.setItem('userId', userId);
+        },
+        
+        clearUserId() {
+            localStorage.removeItem('userId');
+        },
+        
+        // User info management
+        getUserInfo() {
+            const userInfo = localStorage.getItem('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        },
+        
+        setUserInfo(userInfo) {
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        },
+        
+        clearUserInfo() {
+            localStorage.removeItem('userInfo');
+        },
+        
+        // Clear all user data
+        clearAllUserData() {
+            this.clearAuthToken();
+            this.clearUserId();
+            this.clearUserInfo();
+        },
+
+        // Common API methods
+        async get(url) {
+            return this.request(url, { method: 'GET' });
+        },
+
+        async post(url, data) {
+            return this.request(url, { method: 'POST', body: data });
+        },
+
+        async put(url, data) {
+            return this.request(url, { method: 'PUT', body: data });
+        },
+
+        async delete(url) {
+            return this.request(url, { method: 'DELETE' });
+        }
+    };
+</script>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -9,27 +222,7 @@
     <link rel="stylesheet" href="~/MongoDB_Libweb.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MongoDB_Libweb</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
+   
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()

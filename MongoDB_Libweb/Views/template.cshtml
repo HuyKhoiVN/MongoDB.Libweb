@@ -1,0 +1,350 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>
+
+<script type="text/javascript">
+    // API Configuration for Electronic Library System
+    window.ELibAPI = {
+        baseUrl: '/api/v1',
+        endpoints: {
+            // User API
+            user: {
+                login: '/api/v1/user/login',
+                register: '/api/v1/user/register',
+                getById: function(id) { return `/api/v1/user/${id}`; },
+                getByUsername: function(username) { return `/api/v1/user/username/${username}`; },
+                getByEmail: function(email) { return `/api/v1/user/email/${email}`; },
+                getCurrent: '/api/v1/user/current',
+                getAll: function(page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/user?page=${page}&limit=${limit}`; 
+                },
+                update: function(id) { return `/api/v1/user/${id}`; },
+                delete: function(id) { return `/api/v1/user/${id}`; },
+                count: '/api/v1/user/count',
+                changePassword: function(id) { return `/api/v1/user/${id}/change-password`; }
+            },
+            // Book API
+            book: {
+                create: '/api/v1/book',
+                getById: function(id) { return `/api/v1/book/${id}`; },
+                getAll: function(page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/book?page=${page}&limit=${limit}`; 
+                },
+                search: '/api/v1/book/search',
+                update: function(id) { return `/api/v1/book/${id}`; },
+                delete: function(id) { return `/api/v1/book/${id}`; },
+                count: '/api/v1/book/count',
+                getByCategory: function(categoryId, page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/book/category/${categoryId}?page=${page}&limit=${limit}`; 
+                },
+                getByAuthor: function(authorId, page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/book/author/${authorId}?page=${page}&limit=${limit}`; 
+                },
+                getFeatured: function(limit) { 
+                    limit = limit || 6; 
+                    return `/api/v1/book/featured?limit=${limit}`; 
+                },
+                setAvailability: function(id) { return `/api/v1/book/${id}/availability`; }
+            },
+            // Category API
+            category: {
+                create: '/api/v1/category',
+                getById: function(id) { return `/api/v1/category/${id}`; },
+                getByName: function(name) { return `/api/v1/category/name/${name}`; },
+                getAll: function(page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/category?page=${page}&limit=${limit}`; 
+                },
+                update: function(id) { return `/api/v1/category/${id}`; },
+                delete: function(id) { return `/api/v1/category/${id}`; },
+                count: '/api/v1/category/count'
+            },
+            // Author API
+            author: {
+                create: '/api/v1/author',
+                getById: function(id) { return `/api/v1/author/${id}`; },
+                getByName: function(name) { return `/api/v1/author/name/${name}`; },
+                getAll: function(page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/author?page=${page}&limit=${limit}`; 
+                },
+                update: function(id) { return `/api/v1/author/${id}`; },
+                delete: function(id) { return `/api/v1/author/${id}`; },
+                count: '/api/v1/author/count'
+            },
+            // Borrow API
+            borrow: {
+                borrow: '/api/v1/borrow/borrow',
+                return: '/api/v1/borrow/return',
+                getById: function(id) { return `/api/v1/borrow/${id}`; },
+                getByUser: function(userId, page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/borrow/user/${userId}?page=${page}&limit=${limit}`; 
+                },
+                getByUserId: function(userId, page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/borrow/user/${userId}/borrows?page=${page}&limit=${limit}`; 
+                },
+                getByBook: function(bookId, page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/borrow/book/${bookId}?page=${page}&limit=${limit}`; 
+                },
+                getByStatus: function(status, page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/borrow/status/${status}?page=${page}&limit=${limit}`; 
+                },
+                getAll: function(page, limit) { 
+                    page = page || 1; 
+                    limit = limit || 10; 
+                    return `/api/v1/borrow/all?page=${page}&limit=${limit}`; 
+                },
+                getOverdue: '/api/v1/borrow/overdue',
+                count: '/api/v1/borrow/count',
+                countActive: '/api/v1/borrow/count/active',
+                countOverdue: '/api/v1/borrow/count/overdue',
+                getByDateRange: function(startDate, endDate) { 
+                    return `/api/v1/borrow/date-range?startDate=${startDate}&endDate=${endDate}`; 
+                },
+                canBorrow: function(userId, bookId) { 
+                    return `/api/v1/borrow/can-borrow?userId=${userId}&bookId=${bookId}`; 
+                },
+                search: '/api/v1/borrow/search'
+            }
+        },
+        
+        // Helper functions for API calls
+        request: async function(url, options) {
+            options = options || {};
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            // Add user ID to headers if available
+            const userId = this.getUserId();
+            if (userId) {
+                defaultOptions.headers['X-User-Id'] = userId;
+            }
+            
+            const mergedOptions = { ...defaultOptions, ...options };
+            if (mergedOptions.body && typeof mergedOptions.body === 'object') {
+                mergedOptions.body = JSON.stringify(mergedOptions.body);
+            }
+            
+            try {
+                const response = await fetch(url, mergedOptions);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'API request failed');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('API request error:', error);
+                throw error;
+            }
+        },
+        
+        getAuthToken: function() {
+            return localStorage.getItem('authToken') || '';
+        },
+        
+        setAuthToken: function(token) {
+            localStorage.setItem('authToken', token);
+        },
+        
+        clearAuthToken: function() {
+            localStorage.removeItem('authToken');
+        },
+        
+        // User ID management (replacing token-based auth)
+        getUserId: function() {
+            return localStorage.getItem('userId') || '';
+        },
+        
+        setUserId: function(userId) {
+            localStorage.setItem('userId', userId);
+        },
+        
+        clearUserId: function() {
+            localStorage.removeItem('userId');
+        },
+        
+        // User info management
+        getUserInfo: function() {
+            const userInfo = localStorage.getItem('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        },
+        
+        setUserInfo: function(userInfo) {
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        },
+        
+        clearUserInfo: function() {
+            localStorage.removeItem('userInfo');
+        },
+        
+        // Clear all user data
+        clearAllUserData: function() {
+            this.clearAuthToken();
+            this.clearUserId();
+            this.clearUserInfo();
+        },
+        
+        // Common API methods
+        get: async function(url) {
+            return this.request(url, { method: 'GET' });
+        },
+        
+        post: async function(url, data) {
+            return this.request(url, { method: 'POST', body: data });
+        },
+        
+        put: async function(url, data) {
+            return this.request(url, { method: 'PUT', body: data });
+        },
+        
+        delete: async function(url) {
+            return this.request(url, { method: 'DELETE' });
+        }
+    };
+</script>
+
+@* This is the main layout template for the Electronic Library System. It includes common components like header, hero section, stats, and footer. Place this in Views/Shared/_Layout.cshtml or similar. *@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Electronic Library</title>
+    <link rel="stylesheet" href="./template/template.css">
+    <script src="./template/template.js" defer></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">ELIB</div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about">About Us</a></li>
+                    <li><a href="/books">Books</a></li>
+                    <li><a href="/categories">Categories</a></li>
+                    <li><a href="/support">Support</a></li>
+                </ul>
+            </nav>
+            <button class="btn-primary">Get Started</button>
+        </div>
+    </header>
+
+    <main>
+        @* Hero Section Component *@
+        <section class="hero">
+            <div class="container">
+                <h1 class="hero-title">Discover the Future of Reading Today.</h1>
+                <img src="path/to/hero-image.png" alt="Abstract book spiral" class="hero-image">
+                <p class="hero-subtitle">Explore thousands of e-books with our modern library platform.</p>
+            </div>
+        </section>
+
+        @* Stats Section Component *@
+        <section class="stats">
+            <div class="container">
+                <div class="stat-card">
+                    <h3>Trusted Partner</h3>
+                    <p>Empowering readers worldwide.</p>
+                </div>
+                <div class="stat-card">
+                    <h2>721+</h2>
+                    <p>Books Available</p>
+                </div>
+                <div class="stat-card">
+                    <h2>1000+</h2>
+                    <p>Active Users</p>
+                </div>
+                <div class="stat-card">
+                    <h2>7000+</h2>
+                    <p>Borrows Completed</p>
+                </div>
+            </div>
+        </section>
+
+        @* Main Content Area - Render child views here *@
+        <div class="container content">
+            @RenderBody()
+        </div>
+
+        @* FAQ or Additional Section Component *@
+        <section class="faq">
+            <div class="container">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-item">
+                    <h3>How can I borrow a book?</h3>
+                    <p>Sign up and browse our collection.</p>
+                </div>
+                <!-- Add more FAQ items as needed -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Electronic Library. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

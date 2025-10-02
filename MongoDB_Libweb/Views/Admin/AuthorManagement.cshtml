@@ -1,0 +1,672 @@
+@{
+    ViewData["Title"] = "Author Management";
+    Layout = "~/Views/Admin/_AdminLayout.cshtml";
+}
+
+<style>
+    .admin-container {
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .filters {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .filter-row {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+    }
+    .filter-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .filter-group input, .filter-group select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #e55a00;
+    }
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    .btn-success:hover {
+        background: #218838;
+    }
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    .btn-danger:hover {
+        background: #c82333;
+    }
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table th {
+        background: #f8f9fa;
+        padding: 15px;
+        text-align: left;
+        font-weight: bold;
+        color: #333;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .table td {
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .table tr:hover {
+        background: #f8f9fa;
+    }
+    .loading {
+        text-align: center;
+        padding: 50px;
+        color: #666;
+    }
+    .error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .pagination button {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+    }
+    .pagination button:hover:not(:disabled) {
+        background: #f8f9fa;
+    }
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @@keyframes modalSlideIn {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #FF6B00, #FF8C00);
+        color: white;
+        padding: 20px 30px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-title {
+        font-size: 20px;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+    }
+    
+    .close:hover {
+        opacity: 0.7;
+    }
+    
+    .modal-body {
+        padding: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #eee;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #FF6B00;
+    }
+    
+    .modal-footer {
+        padding: 20px 30px;
+        background: #f8f9fa;
+        border-radius: 0 0 12px 12px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .btn-modal {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    
+    .btn-modal-primary {
+        background: #FF6B00;
+        color: white;
+    }
+    
+    .btn-modal-primary:hover {
+        background: #FF4500;
+    }
+    
+    .btn-modal-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-modal-secondary:hover {
+        background: #5a6268;
+    }
+    
+    .btn-modal-danger {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-modal-danger:hover {
+        background: #c82333;
+    }
+    
+    .readonly-field {
+        background: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    
+    .success-message {
+        color: #28a745;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    
+    .form-textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+</style>
+
+<div class="admin-container">
+    <h1>Author Management</h1>
+    
+    <div id="error-container"></div>
+    
+    <div class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="search">Search</label>
+                <input type="text" id="search" placeholder="Search authors...">
+            </div>
+            <div class="filter-group">
+                <label for="limit">Per Page</label>
+                <select id="limit">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button class="btn btn-primary" onclick="loadAuthors()">Search</button>
+            </div>
+            <div class="filter-group">
+                <button class="btn btn-success" onclick="openAuthorModal('add')">+ Add New Author</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div id="authors-loading" class="loading">Loading authors...</div>
+        <table class="table" id="authors-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Bio</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="authors-tbody">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" id="pagination" style="display: none;">
+        <button id="prev-page" onclick="changePage(-1)">Previous</button>
+        <span id="page-info">Page 1 of 1</span>
+        <button id="next-page" onclick="changePage(1)">Next</button>
+    </div>
+</div>
+
+<!-- Author Modal -->
+<div id="authorModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="authorModalTitle">Add New Author</h2>
+            <span class="close" onclick="closeAuthorModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="authorForm">
+                <div class="form-group">
+                    <label for="authorName">Name *</label>
+                    <input type="text" id="authorName" name="name" required>
+                    <div id="name-error" class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="authorBio">Bio</label>
+                    <textarea id="authorBio" name="bio" class="form-textarea" placeholder="Enter author biography..."></textarea>
+                    <div id="bio-error" class="error-message"></div>
+                </div>
+                
+                <div id="authorFormMessage" class="success-message" style="display: none;"></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal btn-modal-secondary" onclick="closeAuthorModal()">Cancel</button>
+            <button type="button" class="btn-modal btn-modal-primary" id="authorModalSaveBtn" onclick="saveAuthor()">Save Author</button>
+            <button type="button" class="btn-modal btn-modal-danger" id="authorModalDeleteBtn" onclick="deleteAuthor()" style="display: none;">Delete Author</button>
+        </div>
+    </div>
+</div>
+
+<script src="~/template/template.js"></script>
+<script>
+    let currentPage = 1;
+    let currentLimit = 10;
+    let totalPages = 1;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAuthors();
+    });
+
+    async function loadAuthors() {
+        try {
+            document.getElementById('authors-loading').style.display = 'block';
+            document.getElementById('authors-table').style.display = 'none';
+            document.getElementById('pagination').style.display = 'none';
+
+            const search = document.getElementById('search').value;
+            const limit = document.getElementById('limit').value;
+            currentLimit = parseInt(limit);
+
+            let url = `/api/v1/author?page=${currentPage}&limit=${currentLimit}`;
+            if (search) {
+                // For search, we'll filter on client side since API doesn't have search
+                url = `/api/v1/author?page=1&limit=1000`; // Get all for client-side filtering
+            }
+
+            const response = await ELibAPI.get(url);
+            
+            if (response.success) {
+                let authors = response.data;
+                
+                // Client-side search if search term provided
+                if (search) {
+                    authors = authors.filter(author => 
+                        author.name.toLowerCase().includes(search.toLowerCase()) ||
+                        (author.bio && author.bio.toLowerCase().includes(search.toLowerCase()))
+                    );
+                    
+                    // Calculate pagination for filtered results
+                    totalPages = Math.ceil(authors.length / currentLimit);
+                    const startIndex = (currentPage - 1) * currentLimit;
+                    const endIndex = startIndex + currentLimit;
+                    authors = authors.slice(startIndex, endIndex);
+                } else {
+                    // Calculate total pages based on count
+                    const countResponse = await ELibAPI.get('/api/v1/author/count');
+                    if (countResponse.success) {
+                        totalPages = Math.ceil(countResponse.data / currentLimit);
+                    }
+                }
+
+                displayAuthors(authors);
+                updatePagination();
+            } else {
+                showError('Failed to load authors: ' + response.message);
+            }
+        } catch (error) {
+            console.error('Error loading authors:', error);
+            showError('Failed to load authors: ' + error.message);
+        } finally {
+            document.getElementById('authors-loading').style.display = 'none';
+            document.getElementById('authors-table').style.display = 'table';
+            document.getElementById('pagination').style.display = 'flex';
+        }
+    }
+
+    function displayAuthors(authors) {
+        const tbody = document.getElementById('authors-tbody');
+        tbody.innerHTML = '';
+
+        if (!authors || authors.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No authors found</td></tr>';
+            return;
+        }
+
+        authors.forEach(author => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${author.id}</td>
+                <td>${author.name}</td>
+                <td>${author.bio || '-'}</td>
+                <td>${new Date(author.createdAt).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-secondary" onclick="openAuthorModal('view', '${author.id}')">View</button>
+                    <button class="btn btn-primary" onclick="openAuthorModal('edit', '${author.id}')">Edit</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteAuthor('${author.id}')">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function updatePagination() {
+        document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prev-page').disabled = currentPage <= 1;
+        document.getElementById('next-page').disabled = currentPage >= totalPages;
+    }
+
+    function changePage(direction) {
+        const newPage = currentPage + direction;
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentPage = newPage;
+            loadAuthors();
+        }
+    }
+
+    // Author Modal Functions
+    let currentAuthorId = null;
+    let authorModalMode = 'add'; // 'add', 'edit', 'view'
+
+    function openAuthorModal(mode, authorId = null) {
+        authorModalMode = mode;
+        currentAuthorId = authorId;
+        const modal = document.getElementById('authorModal');
+        const modalTitle = document.getElementById('authorModalTitle');
+        const saveBtn = document.getElementById('authorModalSaveBtn');
+        const deleteBtn = document.getElementById('authorModalDeleteBtn');
+        const form = document.getElementById('authorForm');
+        
+        // Clear form and errors
+        form.reset();
+        clearAuthorFormErrors();
+        
+        // Set modal title and button visibility
+        if (mode === 'add') {
+            modalTitle.textContent = 'Add New Author';
+            saveBtn.textContent = 'Save Author';
+            saveBtn.style.display = 'inline-block';
+            deleteBtn.style.display = 'none';
+            makeAuthorFormEditable(true);
+        } else if (mode === 'edit') {
+            modalTitle.textContent = 'Edit Author';
+            saveBtn.textContent = 'Update Author';
+            saveBtn.style.display = 'inline-block';
+            deleteBtn.style.display = 'inline-block';
+            makeAuthorFormEditable(true);
+            loadAuthorData(authorId);
+        } else if (mode === 'view') {
+            modalTitle.textContent = 'Author Details';
+            saveBtn.style.display = 'none';
+            deleteBtn.style.display = 'none';
+            makeAuthorFormEditable(false);
+            loadAuthorData(authorId);
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    function closeAuthorModal() {
+        const modal = document.getElementById('authorModal');
+        modal.style.display = 'none';
+        clearAuthorFormErrors();
+    }
+
+    function makeAuthorFormEditable(editable) {
+        const inputs = document.querySelectorAll('#authorForm input, #authorForm textarea');
+        inputs.forEach(input => {
+            input.disabled = !editable;
+            if (!editable) {
+                input.classList.add('readonly-field');
+            } else {
+                input.classList.remove('readonly-field');
+            }
+        });
+    }
+
+    function clearAuthorFormErrors() {
+        const errorElements = document.querySelectorAll('.error-message');
+        errorElements.forEach(el => el.textContent = '');
+        const messageElement = document.getElementById('authorFormMessage');
+        messageElement.style.display = 'none';
+    }
+
+    async function loadAuthorData(authorId) {
+        try {
+            const response = await ELibAPI.get(`/api/v1/author/${authorId}`);
+            if (response.success) {
+                const author = response.data;
+                document.getElementById('authorName').value = author.name || '';
+                document.getElementById('authorBio').value = author.bio || '';
+            } else {
+                showError('Failed to load author data: ' + response.message);
+            }
+        } catch (error) {
+            showError('Error loading author data: ' + error.message);
+        }
+    }
+
+    async function saveAuthor() {
+        if (authorModalMode === 'view') return;
+        
+        clearAuthorFormErrors();
+        
+        // Validate form
+        const name = document.getElementById('authorName').value.trim();
+        const bio = document.getElementById('authorBio').value.trim();
+        
+        let hasErrors = false;
+        
+        if (!name) {
+            document.getElementById('name-error').textContent = 'Name is required';
+            hasErrors = true;
+        }
+        
+        if (hasErrors) return;
+        
+        try {
+            const authorData = {
+                name,
+                bio: bio || null
+            };
+            
+            let response;
+            if (authorModalMode === 'add') {
+                response = await ELibAPI.post('/api/v1/author', authorData);
+            } else {
+                response = await ELibAPI.put(`/api/v1/author/${currentAuthorId}`, authorData);
+            }
+            
+            if (response.success) {
+                document.getElementById('authorFormMessage').textContent = 
+                    authorModalMode === 'add' ? 'Author created successfully!' : 'Author updated successfully!';
+                document.getElementById('authorFormMessage').style.display = 'block';
+                
+                // Reload authors list
+                setTimeout(() => {
+                    closeAuthorModal();
+                    loadAuthors();
+                }, 1500);
+            } else {
+                showError('Failed to save author: ' + response.message);
+            }
+        } catch (error) {
+            showError('Error saving author: ' + error.message);
+        }
+    }
+
+    async function deleteAuthor() {
+        if (!currentAuthorId) return;
+        
+        if (!confirm('Are you sure you want to delete this author?')) return;
+        
+        try {
+            const response = await ELibAPI.delete(`/api/v1/author/${currentAuthorId}`);
+            if (response.success) {
+                document.getElementById('authorFormMessage').textContent = 'Author deleted successfully!';
+                document.getElementById('authorFormMessage').style.display = 'block';
+                
+                setTimeout(() => {
+                    closeAuthorModal();
+                    loadAuthors();
+                }, 1500);
+            } else {
+                showError('Failed to delete author: ' + response.message);
+            }
+        } catch (error) {
+            showError('Error deleting author: ' + error.message);
+        }
+    }
+
+    async function confirmDeleteAuthor(authorId) {
+        if (!confirm('Are you sure you want to delete this author?')) return;
+        
+        try {
+            const response = await ELibAPI.delete(`/api/v1/author/${authorId}`);
+            if (response.success) {
+                showSuccess('Author deleted successfully!');
+                loadAuthors();
+            } else {
+                showError('Failed to delete author: ' + response.message);
+            }
+        } catch (error) {
+            showError('Error deleting author: ' + error.message);
+        }
+    }
+
+    function showError(message) {
+        const errorContainer = document.getElementById('error-container');
+        errorContainer.innerHTML = `<div class="error">${message}</div>`;
+    }
+
+    function showSuccess(message) {
+        const errorContainer = document.getElementById('error-container');
+        errorContainer.innerHTML = `<div class="alert alert-success">${message}</div>`;
+        setTimeout(() => {
+            errorContainer.innerHTML = '';
+        }, 3000);
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('authorModal');
+        if (event.target === modal) {
+            closeAuthorModal();
+        }
+    }
+</script>
+

@@ -89,16 +89,23 @@ namespace MongoDB_Libweb.Controllers
         }
 
         [HttpGet("category/{categoryId}")]
-        public async Task<ActionResult<ApiResponse<List<BookDto>>>> GetBooksByCategory(string categoryId)
+        public async Task<ActionResult<ApiResponse<List<BookDto>>>> GetBooksByCategory(string categoryId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var result = await _bookService.GetBooksByCategoryAsync(categoryId);
+            var result = await _bookService.GetBooksByCategoryAsync(categoryId, page, limit);
             return Ok(result);
         }
 
         [HttpGet("author/{authorId}")]
-        public async Task<ActionResult<ApiResponse<List<BookDto>>>> GetBooksByAuthor(string authorId)
+        public async Task<ActionResult<ApiResponse<List<BookDto>>>> GetBooksByAuthor(string authorId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var result = await _bookService.GetBooksByAuthorAsync(authorId);
+            var result = await _bookService.GetBooksByAuthorAsync(authorId, page, limit);
+            return Ok(result);
+        }
+
+        [HttpGet("featured")]
+        public async Task<ActionResult<ApiResponse<List<BookDto>>>> GetFeaturedBooks([FromQuery] int limit = 6)
+        {
+            var result = await _bookService.GetFeaturedBooksAsync(limit);
             return Ok(result);
         }
 

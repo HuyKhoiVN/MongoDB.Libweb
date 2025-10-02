@@ -9,6 +9,7 @@ namespace MongoDB_Libweb.Services
         Task<ApiResponse<UserDto>> LoginAsync(UserLoginDto dto);
         Task<ApiResponse<UserDto>> GetUserByIdAsync(string id);
         Task<ApiResponse<UserDto>> GetUserByUsernameAsync(string username);
+        Task<ApiResponse<UserDto>> GetUserByEmailAsync(string email);
         Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(int page = 1, int limit = 10);
         Task<ApiResponse<UserDto>> UpdateUserAsync(string id, UserUpdateDto dto);
         Task<ApiResponse<bool>> DeleteUserAsync(string id);
