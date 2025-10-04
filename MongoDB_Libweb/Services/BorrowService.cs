@@ -130,7 +130,26 @@ namespace MongoDB_Libweb.Services
                     return ApiResponse<BorrowDto>.ErrorResponse("Borrow record not found");
                 }
 
-                var borrowDto = MapToDto(borrow);
+                // Lấy thông tin sách từ Book collection
+                var book = await _bookRepository.GetByIdAsync(borrow.BookId);
+                var bookBorrowDto = new BookBorrowDto
+                {
+                    Id = book?.Id ?? borrow.BookId,
+                    Name = book?.Title ?? "Unknown Book"
+                };
+
+                var borrowDto = new BorrowDto
+                {
+                    Id = borrow.Id,
+                    UserId = borrow.UserId,
+                    BookId = borrow.BookId,
+                    BorrowDate = borrow.BorrowDate,
+                    DueDate = borrow.DueDate,
+                    ReturnDate = borrow.ReturnDate,
+                    Status = borrow.Status,
+                    Book = bookBorrowDto
+                };
+
                 return ApiResponse<BorrowDto>.SuccessResponse(borrowDto);
             }
             catch (Exception ex)
@@ -346,6 +365,50 @@ namespace MongoDB_Libweb.Services
             }
         }
 
+        /// <summary>
+        /// Lấy borrow records theo user với thông tin sách (Id và Name)
+        /// Join với Book collection để lấy thông tin sách
+        /// </summary>
+        public async Task<ApiResponse<List<BorrowDto>>> GetBorrowsByUserIdWithBookInfoAsync(string userId, int page = 1, int limit = 10)
+        {
+            try
+            {
+                var borrows = await _borrowRepository.GetByUserIdAsync(userId, page, limit);
+                var borrowDtos = new List<BorrowDto>();
+
+                foreach (var borrow in borrows)
+                {
+                    // Lấy thông tin sách từ Book collection
+                    var book = await _bookRepository.GetByIdAsync(borrow.BookId);
+                    var bookBorrowDto = new BookBorrowDto
+                    {
+                        Id = book?.Id ?? borrow.BookId,
+                        Name = book?.Title ?? "Unknown Book"
+                    };
+
+                    var borrowDto = new BorrowDto
+                    {
+                        Id = borrow.Id,
+                        UserId = borrow.UserId,
+                        BookId = borrow.BookId,
+                        BorrowDate = borrow.BorrowDate,
+                        DueDate = borrow.DueDate,
+                        ReturnDate = borrow.ReturnDate,
+                        Status = borrow.Status,
+                        Book = bookBorrowDto
+                    };
+
+                    borrowDtos.Add(borrowDto);
+                }
+
+                return ApiResponse<List<BorrowDto>>.SuccessResponse(borrowDtos);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<BorrowDto>>.ErrorResponse($"Failed to get borrows by user with book info: {ex.Message}");
+            }
+        }
+
         public async Task<ApiResponse<List<BorrowDto>>> GetAllBorrowsAsync(int page = 1, int limit = 10)
         {
             try
@@ -433,7 +496,12 @@ namespace MongoDB_Libweb.Services
                 BorrowDate = borrow.BorrowDate,
                 DueDate = borrow.DueDate,
                 ReturnDate = borrow.ReturnDate,
-                Status = borrow.Status
+                Status = borrow.Status,
+                Book = new BookBorrowDto
+                {
+                    Id = borrow.BookId,
+                    Name = "Loading..." // Sẽ được cập nhật khi cần thiết
+                }
             };
         }
 

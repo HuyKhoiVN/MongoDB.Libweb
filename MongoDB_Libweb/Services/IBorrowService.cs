@@ -10,6 +10,7 @@ namespace MongoDB_Libweb.Services
         Task<ApiResponse<BorrowDto>> GetBorrowByIdAsync(string id);
         Task<ApiResponse<List<BorrowDto>>> GetBorrowsByUserAsync(string userId, int page = 1, int limit = 10);
         Task<ApiResponse<List<BorrowDto>>> GetBorrowsByUserIdAsync(string userId, int page = 1, int limit = 10);
+        Task<ApiResponse<List<BorrowDto>>> GetBorrowsByUserIdWithBookInfoAsync(string userId, int page = 1, int limit = 10);
         Task<ApiResponse<List<BorrowDto>>> GetBorrowsByBookAsync(string bookId, int page = 1, int limit = 10);
         Task<ApiResponse<List<BorrowDto>>> GetBorrowsByStatusAsync(string status, int page = 1, int limit = 10);
         Task<ApiResponse<List<BorrowDto>>> GetAllBorrowsAsync(int page = 1, int limit = 10);

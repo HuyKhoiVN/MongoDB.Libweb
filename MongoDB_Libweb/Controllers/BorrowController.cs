@@ -64,7 +64,7 @@ namespace MongoDB_Libweb.Controllers
         [HttpGet("user/{userId}/borrows")]
         public async Task<ActionResult<ApiResponse<List<BorrowDto>>>> GetBorrowsByUserId(string userId, [FromQuery] int page = 1, [FromQuery] int limit = 10)
         {
-            var result = await _borrowService.GetBorrowsByUserIdAsync(userId, page, limit);
+            var result = await _borrowService.GetBorrowsByUserIdWithBookInfoAsync(userId, page, limit);
             return Ok(result);
         }
 

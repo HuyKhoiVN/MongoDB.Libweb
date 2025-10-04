@@ -72,7 +72,7 @@ Generated on: September 28, 2025
   - Admin: Access to all CRUD operations (e.g., create/update/delete books).
   - User: Limited to read (GET) and borrow-related actions.
   - Guest: Only public endpoints (e.g., `GET /api/v1/book`).
-- Validate roles in controllers using `[Authorize(Roles = "Admin")]` or custom middleware.
+- Validate roles in controllers using ` ` or custom middleware.
 
 ## 2. Repository Pattern Rules
 

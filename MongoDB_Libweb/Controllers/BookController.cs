@@ -69,7 +69,6 @@ namespace MongoDB_Libweb.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<BookDto>>> UpdateBook(string id, [FromForm] BookUpdateDto dto)
         {
             if (!ModelState.IsValid)
@@ -88,7 +87,6 @@ namespace MongoDB_Libweb.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<bool>>> DeleteBook(string id)
         {
             var result = await _bookService.DeleteBookAsync(id);
@@ -130,7 +128,7 @@ namespace MongoDB_Libweb.Controllers
         }
 
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Admin")]
+         
         public async Task<ActionResult<ApiResponse<bool>>> SetBookAvailability(string id, [FromBody] BookStatusUpdateDto dto)
         {
             var result = await _bookService.SetBookAvailabilityAsync(id, dto.IsAvailable);
@@ -165,7 +163,7 @@ namespace MongoDB_Libweb.Controllers
         }
 
         [HttpPost("validate-file")]
-        [Authorize(Roles = "Admin")]
+         
         public async Task<ActionResult<ApiResponse<bool>>> ValidateFile(IFormFile file)
         {
             var result = await _bookService.ValidateFileAsync(file);

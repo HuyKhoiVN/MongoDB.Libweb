@@ -11,7 +11,7 @@ project:
     Database: MongoDB (libDB) with collections: User, Book, Borrow, Category, Author, FileUpload. Use ObjectId for IDs, indexes for queries (e.g., text index on Book.title/authors/description).
   architecture:
     layers:
-      - Controllers: Handle HTTP requests, use [ApiController], [Authorize(Roles = "Admin")] for management endpoints. Return JSON {success: bool, data: object, message: string, error: string}.
+      - Controllers: Handle HTTP requests, use [ApiController],   for management endpoints. Return JSON {success: bool, data: object, message: string, error: string}.
       - Services: Business logic (IBookService), inject repositories, validate DTOs, handle exceptions (e.g., custom DatabaseException).
       - Repositories: Data access (IBookRepository), use MongoDB.Driver async methods (FindAsync, InsertOneAsync), Builders<T>.Filter for queries, SelectOptionDto for dropdowns.
       - Models: Entities (Book with authors: List<string> ObjectIds, categories: List<string> ObjectIds), DTOs (BookCreateDto with authorsIds: List<string>, file: IFormFile).

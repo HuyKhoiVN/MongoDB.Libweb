@@ -304,7 +304,7 @@
                 const statusText = isOverdue ? 'Overdue' : borrow.status;
                 
                 row.innerHTML = `
-                    <td><div class="book-title" title="${borrow.bookTitle || 'Unknown Book'}">${borrow.bookTitle || 'Unknown Book'}</div></td>
+                    <td><div class="book-title" title="${borrow.book.name || 'Unknown Book'}">${borrow.book.name || 'Unknown Book'}</div></td>
                     <td class="date-cell">${new Date(borrow.borrowDate).toLocaleDateString()}</td>
                     <td class="date-cell ${isOverdue ? 'overdue' : ''}">${new Date(borrow.dueDate).toLocaleDateString()}</td>
                     <td class="date-cell">${borrow.returnDate ? new Date(borrow.returnDate).toLocaleDateString() : '-'}</td>
