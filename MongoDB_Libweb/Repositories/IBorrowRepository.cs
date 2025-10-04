@@ -26,5 +26,6 @@ namespace MongoDB_Libweb.Repositories
         Task<List<BorrowDetailDto>> GetByUserIdWithDetailsAsync(string userId, int page = 1, int limit = 10);
         Task<List<BorrowDetailDto>> GetByBookIdWithDetailsAsync(string bookId, int page = 1, int limit = 10);
         Task<List<BorrowDetailDto>> GetByStatusWithDetailsAsync(string status, int page = 1, int limit = 10);
+        Task<List<BorrowDetailDto>> SearchBorrowsWithDetailsAsync(BorrowSearchDto searchDto);
     }
 }

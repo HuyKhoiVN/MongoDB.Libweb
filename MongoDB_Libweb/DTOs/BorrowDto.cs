@@ -15,6 +15,7 @@ namespace MongoDB_Libweb.DTOs
         public string Status { get; set; } = null!;
     }
 
+    [BsonIgnoreExtraElements]
     public class BorrowDetailDto
     {
         [BsonId]

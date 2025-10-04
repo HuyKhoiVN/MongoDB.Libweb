@@ -313,6 +313,25 @@ namespace MongoDB_Libweb.Services
             }
         }
 
+        /// <summary>
+        /// Tìm kiếm borrow records với thông tin chi tiết User và Book
+        /// Sử dụng MongoDB aggregation pipeline tối ưu - chỉ 1 lần query database
+        /// </summary>
+        /// <param name="searchDto">Điều kiện tìm kiếm</param>
+        /// <returns>ApiResponse chứa danh sách BorrowDetailDto với thông tin đầy đủ</returns>
+        public async Task<ApiResponse<List<BorrowDetailDto>>> SearchBorrowsWithDetailsAsync(BorrowSearchDto searchDto)
+        {
+            try
+            {
+                var borrowDetailDtos = await _borrowRepository.SearchBorrowsWithDetailsAsync(searchDto);
+                return ApiResponse<List<BorrowDetailDto>>.SuccessResponse(borrowDetailDtos);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<BorrowDetailDto>>.ErrorResponse($"Failed to search borrows with details: {ex.Message}");
+            }
+        }
+
         public async Task<ApiResponse<List<BorrowDto>>> GetBorrowsByUserIdAsync(string userId, int page = 1, int limit = 10)
         {
             try

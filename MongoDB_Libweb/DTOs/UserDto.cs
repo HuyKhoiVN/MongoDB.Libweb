@@ -4,6 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace MongoDB_Libweb.DTOs
 {
+    [BsonIgnoreExtraElements]
     public class UserDto
     {
         [BsonId]

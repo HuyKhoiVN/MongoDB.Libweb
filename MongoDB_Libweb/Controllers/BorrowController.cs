@@ -141,6 +141,13 @@ namespace MongoDB_Libweb.Controllers
         [HttpPost("search")]
         public async Task<ActionResult<ApiResponse<List<BorrowDto>>>> SearchBorrows([FromBody] BorrowSearchDto searchDto)
         {
+            var result = await _borrowService.SearchBorrowsWithDetailsAsync(searchDto);
+            return Ok(result);
+        }
+
+        [HttpPost("search-origin")]
+        public async Task<ActionResult<ApiResponse<List<BorrowDetailDto>>>> SearchBorrowsOrigin([FromBody] BorrowSearchDto searchDto)
+        {
             var result = await _borrowService.SearchBorrowsAsync(searchDto);
             return Ok(result);
         }

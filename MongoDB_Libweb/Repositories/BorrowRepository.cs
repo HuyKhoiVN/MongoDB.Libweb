@@ -193,61 +193,41 @@ namespace MongoDB_Libweb.Repositories
              */
 
             var pipeline = new[]
-            {
-                // Stage 1: Match tất cả borrow records
-                new BsonDocument("$match", new BsonDocument()),
-                
-                // Stage 2: Convert userId string thành ObjectId
-                new BsonDocument("$addFields", new BsonDocument
-                {
-                    { "userIdObjectId", new BsonDocument("$toObjectId", "$userId") }
-                }),
-                
-                // Stage 3: Convert bookId string thành ObjectId
-                new BsonDocument("$addFields", new BsonDocument
-                {
-                    { "bookIdObjectId", new BsonDocument("$toObjectId", "$bookId") }
-                }),
-                
-                // Stage 4: Lookup User collection sử dụng ObjectId
-                new BsonDocument("$lookup", new BsonDocument
-                {
-                    { "from", "users" },
-                    { "localField", "userIdObjectId" },
-                    { "foreignField", "_id" },
-                    { "as", "user" }
-                }),
-                
-                // Stage 5: Lookup Book collection sử dụng ObjectId
-                new BsonDocument("$lookup", new BsonDocument
-                {
-                    { "from", "books" },
-                    { "localField", "bookIdObjectId" },
-                    { "foreignField", "_id" },
-                    { "as", "book" }
-                }),
-                
-                // Stage 6: Unwind User array
-                new BsonDocument("$unwind", new BsonDocument
-                {
-                    { "path", "$user" },
-                    { "preserveNullAndEmptyArrays", true }
-                }),
-                
-                // Stage 7: Unwind Book array
-                new BsonDocument("$unwind", new BsonDocument
-                {
-                    { "path", "$book" },
-                    { "preserveNullAndEmptyArrays", true }
-                }),
-                
-                // Stage 8: Remove temporary ObjectId fields
-                new BsonDocument("$unset", new BsonArray { "userIdObjectId", "bookIdObjectId" }),
-                
-                // Stage 9: Skip và Limit cho phân trang
-                new BsonDocument("$skip", skip),
-                new BsonDocument("$limit", limit)
-            };
+{
+    new BsonDocument("$match", new BsonDocument()),
+
+    new BsonDocument("$lookup", new BsonDocument
+    {
+        { "from", "User" },        // tên collection là User (chữ U hoa)
+        { "localField", "userId" },
+        { "foreignField", "_id" },
+        { "as", "user" }
+    }),
+
+    new BsonDocument("$lookup", new BsonDocument
+    {
+        { "from", "Book" },        // tên collection là Book (chữ B hoa)
+        { "localField", "bookId" },
+        { "foreignField", "_id" },
+        { "as", "book" }
+    }),
+
+    new BsonDocument("$unwind", new BsonDocument
+    {
+        { "path", "$user" },
+        { "preserveNullAndEmptyArrays", true }
+    }),
+
+    new BsonDocument("$unwind", new BsonDocument
+    {
+        { "path", "$book" },
+        { "preserveNullAndEmptyArrays", true }
+    }),
+
+    new BsonDocument("$skip", skip),
+    new BsonDocument("$limit", limit)
+};
+
 
             var result = await _borrows.Aggregate<BorrowDetailDto>(pipeline).ToListAsync();
             return result;
@@ -320,54 +300,39 @@ namespace MongoDB_Libweb.Repositories
                 // Stage 1: Match borrow records của user cụ thể
                 new BsonDocument("$match", new BsonDocument("userId", userId)),
                 
-                // Stage 2: Convert userId string thành ObjectId
-                new BsonDocument("$addFields", new BsonDocument
-                {
-                    { "userIdObjectId", new BsonDocument("$toObjectId", "$userId") }
-                }),
-                
-                // Stage 3: Convert bookId string thành ObjectId
-                new BsonDocument("$addFields", new BsonDocument
-                {
-                    { "bookIdObjectId", new BsonDocument("$toObjectId", "$bookId") }
-                }),
-                
-                // Stage 4: Lookup User collection
+                // Stage 2: Lookup User collection (sử dụng trực tiếp userId string)
                 new BsonDocument("$lookup", new BsonDocument
                 {
-                    { "from", "users" },
-                    { "localField", "userIdObjectId" },
+                    { "from", "User" },
+                    { "localField", "userId" },
                     { "foreignField", "_id" },
                     { "as", "user" }
                 }),
                 
-                // Stage 5: Lookup Book collection
+                // Stage 3: Lookup Book collection (sử dụng trực tiếp bookId string)
                 new BsonDocument("$lookup", new BsonDocument
                 {
-                    { "from", "books" },
-                    { "localField", "bookIdObjectId" },
+                    { "from", "Book" },
+                    { "localField", "bookId" },
                     { "foreignField", "_id" },
                     { "as", "book" }
                 }),
                 
-                // Stage 6: Unwind User array
+                // Stage 4: Unwind User array
                 new BsonDocument("$unwind", new BsonDocument
                 {
                     { "path", "$user" },
                     { "preserveNullAndEmptyArrays", true }
                 }),
                 
-                // Stage 7: Unwind Book array
+                // Stage 5: Unwind Book array
                 new BsonDocument("$unwind", new BsonDocument
                 {
                     { "path", "$book" },
                     { "preserveNullAndEmptyArrays", true }
                 }),
                 
-                // Stage 8: Remove temporary ObjectId fields
-                new BsonDocument("$unset", new BsonArray { "userIdObjectId", "bookIdObjectId" }),
-                
-                // Stage 9: Skip và Limit
+                // Stage 6: Skip và Limit
                 new BsonDocument("$skip", skip),
                 new BsonDocument("$limit", limit)
             };
@@ -443,54 +408,39 @@ namespace MongoDB_Libweb.Repositories
                 // Stage 1: Match borrow records của book cụ thể
                 new BsonDocument("$match", new BsonDocument("bookId", bookId)),
                 
-                // Stage 2: Convert userId string thành ObjectId
-                new BsonDocument("$addFields", new BsonDocument
-                {
-                    { "userIdObjectId", new BsonDocument("$toObjectId", "$userId") }
-                }),
-                
-                // Stage 3: Convert bookId string thành ObjectId
-                new BsonDocument("$addFields", new BsonDocument
-                {
-                    { "bookIdObjectId", new BsonDocument("$toObjectId", "$bookId") }
-                }),
-                
-                // Stage 4: Lookup User collection
+                // Stage 2: Lookup User collection (sử dụng trực tiếp userId string)
                 new BsonDocument("$lookup", new BsonDocument
                 {
-                    { "from", "users" },
-                    { "localField", "userIdObjectId" },
+                    { "from", "User" },
+                    { "localField", "userId" },
                     { "foreignField", "_id" },
                     { "as", "user" }
                 }),
                 
-                // Stage 5: Lookup Book collection
+                // Stage 3: Lookup Book collection (sử dụng trực tiếp bookId string)
                 new BsonDocument("$lookup", new BsonDocument
                 {
-                    { "from", "books" },
-                    { "localField", "bookIdObjectId" },
+                    { "from", "Book" },
+                    { "localField", "bookId" },
                     { "foreignField", "_id" },
                     { "as", "book" }
                 }),
                 
-                // Stage 6: Unwind User array
+                // Stage 4: Unwind User array
                 new BsonDocument("$unwind", new BsonDocument
                 {
                     { "path", "$user" },
                     { "preserveNullAndEmptyArrays", true }
                 }),
                 
-                // Stage 7: Unwind Book array
+                // Stage 5: Unwind Book array
                 new BsonDocument("$unwind", new BsonDocument
                 {
                     { "path", "$book" },
                     { "preserveNullAndEmptyArrays", true }
                 }),
                 
-                // Stage 8: Remove temporary ObjectId fields
-                new BsonDocument("$unset", new BsonArray { "userIdObjectId", "bookIdObjectId" }),
-                
-                // Stage 9: Skip và Limit
+                // Stage 6: Skip và Limit
                 new BsonDocument("$skip", skip),
                 new BsonDocument("$limit", limit)
             };
@@ -566,57 +516,173 @@ namespace MongoDB_Libweb.Repositories
                 // Stage 1: Match borrow records theo status
                 new BsonDocument("$match", new BsonDocument("status", status)),
                 
-                // Stage 2: Convert userId string thành ObjectId
-                new BsonDocument("$addFields", new BsonDocument
-                {
-                    { "userIdObjectId", new BsonDocument("$toObjectId", "$userId") }
-                }),
-                
-                // Stage 3: Convert bookId string thành ObjectId
-                new BsonDocument("$addFields", new BsonDocument
-                {
-                    { "bookIdObjectId", new BsonDocument("$toObjectId", "$bookId") }
-                }),
-                
-                // Stage 4: Lookup User collection
+                // Stage 2: Lookup User collection (sử dụng trực tiếp userId string)
                 new BsonDocument("$lookup", new BsonDocument
                 {
-                    { "from", "users" },
-                    { "localField", "userIdObjectId" },
+                    { "from", "User" },
+                    { "localField", "userId" },
                     { "foreignField", "_id" },
                     { "as", "user" }
                 }),
                 
-                // Stage 5: Lookup Book collection
+                // Stage 3: Lookup Book collection (sử dụng trực tiếp bookId string)
                 new BsonDocument("$lookup", new BsonDocument
                 {
-                    { "from", "books" },
-                    { "localField", "bookIdObjectId" },
+                    { "from", "Book" },
+                    { "localField", "bookId" },
                     { "foreignField", "_id" },
                     { "as", "book" }
                 }),
                 
-                // Stage 6: Unwind User array
+                // Stage 4: Unwind User array
                 new BsonDocument("$unwind", new BsonDocument
                 {
                     { "path", "$user" },
                     { "preserveNullAndEmptyArrays", true }
                 }),
                 
-                // Stage 7: Unwind Book array
+                // Stage 5: Unwind Book array
                 new BsonDocument("$unwind", new BsonDocument
                 {
                     { "path", "$book" },
                     { "preserveNullAndEmptyArrays", true }
                 }),
                 
-                // Stage 8: Remove temporary ObjectId fields
-                new BsonDocument("$unset", new BsonArray { "userIdObjectId", "bookIdObjectId" }),
-                
-                // Stage 9: Skip và Limit
+                // Stage 6: Skip và Limit
                 new BsonDocument("$skip", skip),
                 new BsonDocument("$limit", limit)
             };
+
+            var result = await _borrows.Aggregate<BorrowDetailDto>(pipeline).ToListAsync();
+            return result;
+        }
+
+        /// <summary>
+        /// Tìm kiếm borrow records với thông tin chi tiết User và Book
+        /// Sử dụng MongoDB aggregation pipeline tối ưu với các điều kiện filter
+        /// </summary>
+        /// <param name="searchDto">Điều kiện tìm kiếm</param>
+        /// <returns>Danh sách BorrowDetailDto với thông tin đầy đủ</returns>
+        public async Task<List<BorrowDetailDto>> SearchBorrowsWithDetailsAsync(BorrowSearchDto searchDto)
+        {
+            var skip = (searchDto.Page - 1) * searchDto.Limit;
+
+            // Tạo match conditions dựa trên searchDto
+            var matchConditions = new BsonDocument();
+
+            if (!string.IsNullOrEmpty(searchDto.BookId))
+            {
+                matchConditions.Add("bookId", searchDto.BookId);
+            }
+
+            if (!string.IsNullOrEmpty(searchDto.Status))
+            {
+                matchConditions.Add("status", searchDto.Status);
+            }
+
+            if (searchDto.FromDate.HasValue)
+            {
+                matchConditions.Add("borrowDate", new BsonDocument("$gte", BsonDateTime.Create(searchDto.FromDate.Value)));
+            }
+
+            if (searchDto.ToDate.HasValue)
+            {
+                if (matchConditions.Contains("borrowDate"))
+                {
+                    // Nếu đã có FromDate, thêm điều kiện $lte
+                    matchConditions["borrowDate"] = new BsonDocument
+                    {
+                        { "$gte", matchConditions["borrowDate"]["$gte"] },
+                        { "$lte", BsonDateTime.Create(searchDto.ToDate.Value) }
+                    };
+                }
+                else
+                {
+                    matchConditions.Add("borrowDate", new BsonDocument("$lte", BsonDateTime.Create(searchDto.ToDate.Value)));
+                }
+            }
+
+            /*
+             * MongoDB Aggregation Pipeline Query:
+             * 
+             * [
+             *   // Stage 1: Match borrow records với các điều kiện filter
+             *   { $match: { bookId: "bookId", status: "Borrowed", borrowDate: { $gte: ISODate("..."), $lte: ISODate("...") } } },
+             *   
+             *   // Stage 2: Lookup User collection (sử dụng trực tiếp userId string)
+             *   { $lookup: {
+             *       from: "User",
+             *       localField: "userId", 
+             *       foreignField: "_id",
+             *       as: "user"
+             *   }},
+             *   
+             *   // Stage 3: Lookup Book collection (sử dụng trực tiếp bookId string)
+             *   { $lookup: {
+             *       from: "Book",
+             *       localField: "bookId",
+             *       foreignField: "_id", 
+             *       as: "book"
+             *   }},
+             *   
+             *   // Stage 4: Unwind User array
+             *   { $unwind: { 
+             *       path: "$user", 
+             *       preserveNullAndEmptyArrays: true 
+             *   }},
+             *   
+             *   // Stage 5: Unwind Book array
+             *   { $unwind: { 
+             *       path: "$book", 
+             *       preserveNullAndEmptyArrays: true 
+             *   }},
+             *   
+             *   // Stage 6: Skip và Limit
+             *   { $skip: skip },
+             *   { $limit: limit }
+             * ]
+             */
+
+            var pipeline = new List<BsonDocument>();
+
+            // Stage 1: Match với các điều kiện filter
+            pipeline.Add(new BsonDocument("$match", matchConditions));
+
+            // Stage 2: Lookup User collection (sử dụng trực tiếp userId string)
+            pipeline.Add(new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", "User" },
+                { "localField", "userId" },
+                { "foreignField", "_id" },
+                { "as", "user" }
+            }));
+
+            // Stage 3: Lookup Book collection (sử dụng trực tiếp bookId string)
+            pipeline.Add(new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", "Book" },
+                { "localField", "bookId" },
+                { "foreignField", "_id" },
+                { "as", "book" }
+            }));
+
+            // Stage 4: Unwind User array
+            pipeline.Add(new BsonDocument("$unwind", new BsonDocument
+            {
+                { "path", "$user" },
+                { "preserveNullAndEmptyArrays", true }
+            }));
+
+            // Stage 5: Unwind Book array
+            pipeline.Add(new BsonDocument("$unwind", new BsonDocument
+            {
+                { "path", "$book" },
+                { "preserveNullAndEmptyArrays", true }
+            }));
+
+            // Stage 6: Skip và Limit
+            pipeline.Add(new BsonDocument("$skip", skip));
+            pipeline.Add(new BsonDocument("$limit", searchDto.Limit));
 
             var result = await _borrows.Aggregate<BorrowDetailDto>(pipeline).ToListAsync();
             return result;

@@ -26,5 +26,6 @@ namespace MongoDB_Libweb.Services
         Task<ApiResponse<List<BorrowDto>>> GetBorrowsByDateRangeAsync(DateTime startDate, DateTime endDate);
         Task<ApiResponse<bool>> CanUserBorrowBookAsync(string userId, string bookId);
         Task<ApiResponse<List<BorrowDto>>> SearchBorrowsAsync(BorrowSearchDto searchDto);
+        Task<ApiResponse<List<BorrowDetailDto>>> SearchBorrowsWithDetailsAsync(BorrowSearchDto searchDto);
     }
 }
