@@ -54,6 +54,96 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+        
+        /* Responsive Design */
+        @@media (max-width: 1024px) {
+            .admin-container {
+                padding: 15px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 20px;
+            }
+            
+            .stat-number {
+                font-size: 2.2em;
+            }
+        }
+        
+        @@media (max-width: 768px) {
+            .admin-container {
+                padding: 10px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 12px;
+            }
+            
+            .stat-card {
+                padding: 18px;
+            }
+            
+            .stat-number {
+                font-size: 2em;
+            }
+            
+            .stat-label {
+                font-size: 1em;
+            }
+        }
+        
+        @@media (max-width: 480px) {
+            .admin-container {
+                padding: 5px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-number {
+                font-size: 1.8em;
+                margin-bottom: 8px;
+            }
+            
+            .stat-label {
+                font-size: 0.9em;
+            }
+            
+            .chart-container {
+                padding: 20px;
+                margin-bottom: 15px;
+            }
+        }
+        
+        @@media (max-width: 320px) {
+            .stat-card {
+                padding: 12px;
+            }
+            
+            .stat-number {
+                font-size: 1.6em;
+            }
+            
+            .stat-label {
+                font-size: 0.85em;
+            }
+            
+            .chart-container {
+                padding: 15px;
+            }
+        }
     </style>
 
 <div class="admin-container">

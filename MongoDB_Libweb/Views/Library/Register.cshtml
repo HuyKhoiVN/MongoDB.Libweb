@@ -116,6 +116,116 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* Additional Responsive Design */
+        @@media (max-width: 768px) {
+            .auth-container {
+                max-width: 350px;
+                margin: 80px auto;
+                padding: 30px;
+            }
+            
+            .auth-title {
+                font-size: 1.8em;
+            }
+            
+            .auth-subtitle {
+                font-size: 1em;
+            }
+            
+            .form-group input {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+            
+            .btn-register {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+        
+        @@media (max-width: 480px) {
+            .auth-container {
+                max-width: 320px;
+                margin: 60px auto;
+                padding: 25px;
+            }
+            
+            .auth-title {
+                font-size: 1.6em;
+                margin-bottom: 8px;
+            }
+            
+            .auth-subtitle {
+                font-size: 0.9em;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-group label {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+            
+            .form-group input {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            .btn-register {
+                padding: 8px 16px;
+                font-size: 14px;
+                margin-bottom: 15px;
+            }
+            
+            .auth-links {
+                font-size: 14px;
+            }
+            
+            .back-home {
+                margin-top: 15px;
+            }
+            
+            .back-home a {
+                font-size: 14px;
+            }
+        }
+        
+        @@media (max-width: 320px) {
+            .auth-container {
+                max-width: 280px;
+                margin: 40px auto;
+                padding: 20px;
+            }
+            
+            .auth-title {
+                font-size: 1.4em;
+            }
+            
+            .auth-subtitle {
+                font-size: 0.85em;
+            }
+            
+            .form-group input {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            
+            .btn-register {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .auth-links {
+                font-size: 12px;
+            }
+            
+            .back-home a {
+                font-size: 12px;
+            }
+        }
     </style>
 
 <div class="auth-container">

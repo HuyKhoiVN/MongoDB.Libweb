@@ -201,6 +201,145 @@
                 height: 300px;
             }
         }
+        
+        /* Responsive Design */
+        @@media (max-width: 1024px) {
+            .book-details-container {
+                padding: 15px;
+            }
+            
+            .book-details-header {
+                padding: 25px;
+            }
+            
+            .book-details-content {
+                grid-template-columns: 1fr 1fr;
+                gap: 25px;
+            }
+            
+            .book-cover-large {
+                height: 250px;
+            }
+        }
+        
+        @@media (max-width: 768px) {
+            .book-details-container {
+                padding: 10px;
+            }
+            
+            .book-details-header {
+                padding: 20px;
+            }
+            
+            .book-details-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .book-cover-section {
+                text-align: center;
+            }
+            
+            .book-cover-large {
+                height: 200px;
+                max-width: 300px;
+            }
+            
+            .book-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-borrow,
+            .btn-back {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        
+        @@media (max-width: 480px) {
+            .book-details-container {
+                padding: 5px;
+            }
+            
+            .book-details-header {
+                padding: 15px;
+            }
+            
+            .book-title {
+                font-size: 1.5em;
+                margin-bottom: 10px;
+            }
+            
+            .book-author {
+                font-size: 1em;
+                margin-bottom: 8px;
+            }
+            
+            .book-meta {
+                font-size: 0.9em;
+                margin-bottom: 15px;
+            }
+            
+            .book-cover-large {
+                height: 180px;
+                max-width: 250px;
+            }
+            
+            .book-description {
+                font-size: 0.9em;
+                line-height: 1.5;
+            }
+            
+            .book-categories {
+                margin-bottom: 15px;
+            }
+            
+            .book-category {
+                font-size: 0.8em;
+                padding: 2px 6px;
+            }
+            
+            .btn-borrow,
+            .btn-back {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+        
+        @@media (max-width: 320px) {
+            .book-title {
+                font-size: 1.3em;
+            }
+            
+            .book-author {
+                font-size: 0.9em;
+            }
+            
+            .book-meta {
+                font-size: 0.8em;
+            }
+            
+            .book-cover-large {
+                height: 150px;
+                max-width: 200px;
+            }
+            
+            .book-description {
+                font-size: 0.85em;
+            }
+            
+            .book-category {
+                font-size: 0.75em;
+                padding: 1px 4px;
+            }
+            
+            .btn-borrow,
+            .btn-back {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
     </style>
 
 <div class="book-details-container">

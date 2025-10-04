@@ -55,5 +55,22 @@ namespace MongoDB_Libweb.Repositories
             var count = await _fileUploads.CountDocumentsAsync(f => f.BookId == bookId);
             return count > 0;
         }
+
+        public async Task<bool> DeleteByBookIdAsync(string bookId)
+        {
+            var result = await _fileUploads.DeleteManyAsync(f => f.BookId == bookId);
+            return result.DeletedCount > 0;
+        }
+
+        public async Task<FileUpload?> UpdateByBookIdAsync(string bookId, FileUpload fileUpload)
+        {
+            fileUpload.UploadDate = DateTime.UtcNow;
+            var result = await _fileUploads.FindOneAndReplaceAsync(
+                f => f.BookId == bookId,
+                fileUpload,
+                new FindOneAndReplaceOptions<FileUpload> { ReturnDocument = ReturnDocument.After }
+            );
+            return result;
+        }
     }
 }

@@ -28,15 +28,15 @@ Generated on: September 28, 2025
 - Include **versioning** in the API path (e.g., `/api/v1/`).
 
 ### 1.2 Naming Conventions
-- **Resource names**: Use lowercase, plural nouns (e.g., `/api/v1/users`, `/api/v1/books`).
+- **Resource names**: Use lowercase, plural nouns (e.g., `/api/v1/users`, `/api/v1/book`).
 - **Nested resources**: Use sub-paths for relationships (e.g., `/api/v1/users/{userId}/borrows`).
 - **Query parameters**: Use camelCase (e.g., `page`, `limit`, `searchQuery`).
 - **Route examples**:
-  - `GET /api/v1/books`: List all books with pagination.
-  - `GET /api/v1/books/{id}`: Get a specific book.
-  - `POST /api/v1/books`: Create a new book.
-  - `PUT /api/v1/books/{id}`: Update a book.
-  - `DELETE /api/v1/books/{id}`: Delete a book.
+  - `GET /api/v1/book`: List all books with pagination.
+  - `GET /api/v1/book/{id}`: Get a specific book.
+  - `POST /api/v1/book`: Create a new book.
+  - `PUT /api/v1/book/{id}`: Update a book.
+  - `DELETE /api/v1/book/{id}`: Delete a book.
 
 ### 1.3 Response Format
 - Use a consistent JSON response structure:
@@ -71,7 +71,7 @@ Generated on: September 28, 2025
 - Restrict endpoints by role:
   - Admin: Access to all CRUD operations (e.g., create/update/delete books).
   - User: Limited to read (GET) and borrow-related actions.
-  - Guest: Only public endpoints (e.g., `GET /api/v1/books`).
+  - Guest: Only public endpoints (e.g., `GET /api/v1/book`).
 - Validate roles in controllers using `[Authorize(Roles = "Admin")]` or custom middleware.
 
 ## 2. Repository Pattern Rules

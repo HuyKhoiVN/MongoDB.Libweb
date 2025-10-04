@@ -5,7 +5,6 @@
 
 <style>
         .admin-container {
-             
             margin: 0 auto;
             padding: 20px;
         }
@@ -293,6 +292,198 @@
             color: #28a745;
             font-size: 12px;
             margin-top: 5px;
+        }
+        
+        /* Responsive Design */
+        @@media (max-width: 1024px) {
+            .admin-container {
+                padding: 15px;
+            }
+            
+            .filter-row {
+                gap: 12px;
+            }
+            
+            .filter-group {
+                min-width: 140px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+        }
+        
+        @@media (max-width: 768px) {
+            .admin-container {
+                padding: 10px;
+            }
+            
+            .filters {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .filter-group {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .filter-group input, 
+            .filter-group select {
+                width: 100%;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table {
+                min-width: 600px;
+            }
+            
+            .table th, .table td {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .modal-content {
+                width: 98%;
+                margin: 2% auto;
+                max-height: 95vh;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+            }
+            
+            .modal-title {
+                font-size: 18px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .modal-footer {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-modal {
+                width: 100%;
+                padding: 12px 20px;
+            }
+        }
+        
+        @@media (max-width: 480px) {
+            .admin-container {
+                padding: 5px;
+            }
+            
+            .filters {
+                padding: 10px;
+            }
+            
+            .table th, .table td {
+                padding: 6px 4px;
+                font-size: 11px;
+            }
+            
+            .btn {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+            
+            .modal-content {
+                width: 100%;
+                margin: 0;
+                border-radius: 0;
+                max-height: 100vh;
+            }
+            
+            .modal-header {
+                padding: 12px 15px;
+            }
+            
+            .modal-title {
+                font-size: 16px;
+            }
+            
+            .modal-body {
+                padding: 15px;
+            }
+            
+            .form-group input,
+            .form-group select {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            
+            .pagination {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .pagination button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+        }
+        
+        @@media (max-width: 320px) {
+            .table {
+                min-width: 500px;
+            }
+            
+            .table th, .table td {
+                padding: 4px 2px;
+                font-size: 10px;
+            }
+            
+            .btn {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+            
+            .modal-header {
+                padding: 10px 12px;
+            }
+            
+            .modal-title {
+                font-size: 14px;
+            }
+            
+            .modal-body {
+                padding: 12px;
+            }
+            
+            .form-group input,
+            .form-group select {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
         }
     </style>
 

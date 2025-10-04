@@ -34,6 +34,149 @@
         .book-title { font-weight: bold; color: #333; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .date-cell { white-space: nowrap; }
         .overdue { color: #dc3545; font-weight: bold; }
+        
+        /* Responsive Design */
+        @@media (max-width: 1024px) {
+            .history-container {
+                padding: 15px;
+            }
+            
+            .history-header {
+                padding: 25px;
+            }
+            
+            .history-title {
+                font-size: 1.8em;
+            }
+            
+            .filters {
+                gap: 12px;
+            }
+            
+            .filter-group {
+                min-width: 140px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+        }
+        
+        @@media (max-width: 768px) {
+            .history-container {
+                padding: 10px;
+            }
+            
+            .history-header {
+                padding: 20px;
+            }
+            
+            .history-title {
+                font-size: 1.6em;
+                margin-bottom: 15px;
+            }
+            
+            .filters {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .filter-group {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .filter-group input, 
+            .filter-group select {
+                width: 100%;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table {
+                min-width: 600px;
+            }
+            
+            .table th, .table td {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+            
+            .book-title {
+                max-width: 150px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+        
+        @@media (max-width: 480px) {
+            .history-container {
+                padding: 5px;
+            }
+            
+            .history-header {
+                padding: 15px;
+            }
+            
+            .history-title {
+                font-size: 1.4em;
+                margin-bottom: 12px;
+            }
+            
+            .filters {
+                gap: 12px;
+            }
+            
+            .table th, .table td {
+                padding: 6px 4px;
+                font-size: 11px;
+            }
+            
+            .book-title {
+                max-width: 120px;
+            }
+            
+            .btn {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+            
+            .status-badge {
+                padding: 2px 6px;
+                font-size: 10px;
+            }
+        }
+        
+        @@media (max-width: 320px) {
+            .table {
+                min-width: 500px;
+            }
+            
+            .table th, .table td {
+                padding: 4px 2px;
+                font-size: 10px;
+            }
+            
+            .book-title {
+                max-width: 100px;
+            }
+            
+            .btn {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+            
+            .status-badge {
+                padding: 1px 4px;
+                font-size: 9px;
+            }
+        }
     </style>
 
 <div class="history-container">

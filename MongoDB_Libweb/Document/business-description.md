@@ -117,7 +117,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 
 ## 2. Book Management APIs
 
-### 2.1 POST /api/v1/books
+### 2.1 POST /api/v1/book
 **Mục đích**: Tạo sách mới
 
 **Business Logic**:
@@ -129,7 +129,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: BookDto
 **Status Codes**: 201 Created, 400 Bad Request
 
-### 2.2 GET /api/v1/books/{id}
+### 2.2 GET /api/v1/book/{id}
 **Mục đích**: Lấy thông tin sách theo ID
 
 **Business Logic**:
@@ -140,7 +140,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: BookDto
 **Status Codes**: 200 OK, 404 Not Found
 
-### 2.3 GET /api/v1/books
+### 2.3 GET /api/v1/book
 **Mục đích**: Lấy danh sách tất cả sách với phân trang
 
 **Business Logic**:
@@ -151,7 +151,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: List<BookDto>
 **Status Codes**: 200 OK
 
-### 2.4 POST /api/v1/books/search
+### 2.4 POST /api/v1/book/search
 **Mục đích**: Tìm kiếm sách với nhiều tiêu chí
 
 **Business Logic**:
@@ -165,7 +165,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: List<BookDto>
 **Status Codes**: 200 OK
 
-### 2.5 PUT /api/v1/books/{id}
+### 2.5 PUT /api/v1/book/{id}
 **Mục đích**: Cập nhật thông tin sách
 
 **Business Logic**:
@@ -177,7 +177,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: BookDto đã cập nhật
 **Status Codes**: 200 OK, 400 Bad Request, 404 Not Found
 
-### 2.6 DELETE /api/v1/books/{id}
+### 2.6 DELETE /api/v1/book/{id}
 **Mục đích**: Xóa sách
 
 **Business Logic**:
@@ -188,7 +188,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: Boolean result
 **Status Codes**: 200 OK, 404 Not Found
 
-### 2.7 GET /api/v1/books/count
+### 2.7 GET /api/v1/book/count
 **Mục đích**: Lấy tổng số lượng sách
 
 **Business Logic**:
@@ -197,7 +197,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: Long (số lượng)
 **Status Codes**: 200 OK
 
-### 2.8 GET /api/v1/books/category/{categoryId}
+### 2.8 GET /api/v1/book/category/{categoryId}
 **Mục đích**: Lấy sách theo danh mục
 
 **Business Logic**:
@@ -207,7 +207,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: List<BookDto>
 **Status Codes**: 200 OK
 
-### 2.9 GET /api/v1/books/author/{authorId}
+### 2.9 GET /api/v1/book/author/{authorId}
 **Mục đích**: Lấy sách theo tác giả
 
 **Business Logic**:
@@ -217,7 +217,7 @@ Hệ thống thư viện điện tử được xây dựng với ASP.NET Core 8.
 **Output**: List<BookDto>
 **Status Codes**: 200 OK
 
-### 2.10 PUT /api/v1/books/{id}/availability
+### 2.10 PUT /api/v1/book/{id}/availability
 **Mục đích**: Thay đổi trạng thái khả dụng của sách
 
 **Business Logic**:

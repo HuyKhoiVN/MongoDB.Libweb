@@ -22,13 +22,13 @@ namespace MongoDB_Libweb.Models
         public string Description { get; set; } = null!;
 
         [BsonElement("publishYear")]
-        public int PublishYear { get; set; }
+        public int? PublishYear { get; set; }
 
         [BsonElement("fileUrl")]
-        public string FileUrl { get; set; } = null!;
+        public string? FileUrl { get; set; }
 
         [BsonElement("fileFormat")]
-        public string FileFormat { get; set; } = null!; // "PDF", "EPUB"
+        public string? FileFormat { get; set; } // "PDF", "EPUB"
 
         [BsonElement("isAvailable")]
         public bool IsAvailable { get; set; } = true;

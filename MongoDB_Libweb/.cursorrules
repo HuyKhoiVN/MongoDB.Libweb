@@ -1,0 +1,69 @@
+# .cursorrules for Library Management System Project
+# Project: Ứng dụng CSDL MongoDB vào bài toán quản lý thư viện sách điện tử
+# Tech Stack: ASP.NET MVC (.NET 8.0), MongoDB (libDB), MongoDB.Driver, Bootstrap 5, jQuery/Select2 for UI
+# Generated: October 05, 2025
+# Purpose: Guide AI to generate consistent, efficient code following MVC pattern, NoSQL best practices, and project-specific rules.
+
+project:
+  overview: |
+    This is a high-level academic project for a graduate report on applying MongoDB to library management. The system handles electronic books with features like user auth (JWT, roles: Admin/User), book CRUD, borrow/return tracking, multi-author/category selection (ObjectId-based), file upload (PDF/EPUB <50MB), full-text search, and responsive UI.
+    Key goals: Flexible schema for unstructured data (e.g., Book.authors as List<string> ObjectIds), async operations for performance, role-based access.
+    Database: MongoDB (libDB) with collections: User, Book, Borrow, Category, Author, FileUpload. Use ObjectId for IDs, indexes for queries (e.g., text index on Book.title/authors/description).
+  architecture:
+    layers:
+      - Controllers: Handle HTTP requests, use [ApiController], [Authorize(Roles = "Admin")] for management endpoints. Return JSON {success: bool, data: object, message: string, error: string}.
+      - Services: Business logic (IBookService), inject repositories, validate DTOs, handle exceptions (e.g., custom DatabaseException).
+      - Repositories: Data access (IBookRepository), use MongoDB.Driver async methods (FindAsync, InsertOneAsync), Builders<T>.Filter for queries, SelectOptionDto for dropdowns.
+      - Models: Entities (Book with authors: List<string> ObjectIds, categories: List<string> ObjectIds), DTOs (BookCreateDto with authorsIds: List<string>, file: IFormFile).
+      - UI: Razor Views with Bootstrap 5 responsive (grid col-md-6 for desktop, col-12 for mobile), Select2 for multi-select, JS validation for file upload.
+    conventions:
+      - Naming: PascalCase for classes/methods/properties (e.g., GetBooksByAuthorAsync), camelCase for params/vars.
+      - Async: All DB/IO operations async/await (Task<T>).
+      - DTOs: Use for API input/output to decouple from entities.
+      - Error Handling: Try-catch MongoException, return 400/404/500 with JSON error.
+      - Auth: JWT Bearer, role checks in Controller/Service.
+
+coding_style:
+  csharp:
+    version: C# 12+ features (primary constructors, records for DTOs if simple).
+    style: Concise, readable; use var where type obvious, LINQ for collections.
+    imports: using MongoDB.Driver; using Microsoft.AspNetCore.Mvc; using Microsoft.AspNetCore.Authorization;
+    comments: /// XML docs for public methods; // inline for logic.
+  html_css_js:
+    framework: Bootstrap 5 (responsive grid: col-lg-4/col-md-6/col-sm-12), jQuery for AJAX.
+    js: ES6+, use async/await for fetch; Select2 for multi-select (CDN: https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js).
+    validation: Client-side JS for file (size <50MB, type PDF/EPUB), server-side ModelState.
+  responsive:
+    general: All views responsive (Bootstrap container-fluid, table-responsive for lists).
+    breakpoints:
+      - Mobile (<576px): Stack fields vertical (col-12), smaller font (0.875rem), hide non-essential actions.
+      - Tablet (576-768px): 2 columns for forms (col-sm-6), horizontal scroll for tables.
+      - Desktop (>992px): 3+ columns (col-md-4), full-width tables, show all actions.
+    media_queries: Add CSS @media (max-width: 576px) { .form-group { flex-direction: column; } .table { font-size: 0.8rem; } }
+
+specific_rules:
+  book_management:
+    dto_adjustments:
+      - SelectOptionDto: public class { public string Id { get; set; } public string Value { get; set; } } // For authors/categories dropdowns: Id = ObjectId.ToString(), Value = name.
+      - BookCreateDto/UpdateDto: Add authorsIds: List<string> (required for multi-select ObjectIds), categoriesIds: List<string>; optional authorsNames/categoriesNames: List<string> for auto-create if Id empty.
+    api_logic:
+      - GetAllAuthorsAsync/GetAllCategoriesAsync (Repository): Return List<SelectOptionDto> via Find().Project(x => new SelectOptionDto { Id = x.Id, Value = x.Name }).ToListAsync().
+      - POST /api/v1/books (Add New): In Service: For each authorId in authorsIds, if empty but authorsNames provided, Create new Author { Name = name }, get new Id; same for categories; map to Book.authors = authorsIds; handle file upload as before.
+      - PUT /api/v1/books/{id} (Edit): Similar to add, but partial update (only replace if provided); fetch existing Book, merge arrays.
+      - Search: Filter $in on authorsIds/categoriesIds (AnyIn("authors", authorsIds)).
+    ui_adjustments:
+      - Multi-Select: Use <select multiple class="select2" name="authorsIds">, load options AJAX from /api/v1/authors (List<SelectOptionDto>), display Value=name, submit value=Id.
+      - Auto-Create: JS on submit, if selected has custom name (not in options), send as authorsNames, let Service handle creation.
+      - Details/Edit: Load authors/categories as multi-select with pre-selected Ids (Select2.val(authorsIds).trigger('change')), display joined names.
+      - Responsive: Forms: @media (max-width: 768px) { .select2-container { width: 100% !important; } }; Tables: overflow-x: auto on mobile.
+  mongo_queries:
+    - Use Builders<T>.Filter for all (e.g., And(Text(searchQuery), AnyIn("authors", ids))).
+    - Aggregation for reports (e.g., borrow stats): Pipeline with $match, $group by bookId, $lookup to Book.
+  testing:
+    - Unit: xUnit for Services (Moq repositories), integration for API (WebApplicationFactory).
+    - UI: Manual test responsive on dev tools (Chrome F12).
+
+enforcement:
+  - Always: Check for async, DTO usage, role auth in suggestions.
+  - Warnings: Flag non-responsive UI, sync DB calls, missing indexes in queries.
+  - Examples: When suggesting Book create, include multi-Id logic and file validate.

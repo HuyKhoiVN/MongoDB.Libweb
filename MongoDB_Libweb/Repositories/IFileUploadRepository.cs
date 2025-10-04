@@ -9,6 +9,8 @@ namespace MongoDB_Libweb.Repositories
         Task<List<FileUpload>> GetByBookIdAsync(string bookId);
         Task<FileUpload> CreateAsync(FileUpload fileUpload);
         Task<bool> DeleteAsync(string id);
+        Task<bool> DeleteByBookIdAsync(string bookId);
+        Task<FileUpload?> UpdateByBookIdAsync(string bookId, FileUpload fileUpload);
         Task<long> CountAsync();
         Task<bool> ExistsByBookIdAsync(string bookId);
     }

@@ -106,7 +106,7 @@ GET /api/v1/categories?page=1&limit=50
 
 #### 3.1 API Call
 ```http
-POST /api/v1/books
+POST /api/v1/book
 Content-Type: application/json
 
 {
@@ -193,7 +193,7 @@ Content-Type: application/json
 
 ### Lấy Sách Theo Tác Giả
 ```http
-GET /api/v1/books/author/{authorId}
+GET /api/v1/book/author/{authorId}
 ```
 
 **Business Logic:**
@@ -211,7 +211,7 @@ GET /api/v1/authors/{authorId}
 
 ### Tìm Kiếm Sách Nâng Cao
 ```http
-POST /api/v1/books/search
+POST /api/v1/book/search
 Content-Type: application/json
 
 {
